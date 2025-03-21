@@ -19,7 +19,6 @@ if (walletButton) {
 
 // Створення шахової дошки
 function createChessboard() {
-document.addEventListener("DOMContentLoaded", function() {
     const board = document.querySelector(".board");
     const figures = [
         "♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜",
@@ -44,4 +43,13 @@ document.addEventListener("DOMContentLoaded", function() {
             }
             board.appendChild(square);
             if (figures[index] !== "") {
-                square.textContent = figures
+                square.textContent = figures[index];
+            }
+            index++;
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    createChessboard(); // Викликаємо функцію після завантаження DOM
+});
