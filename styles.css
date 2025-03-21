@@ -1,0 +1,174 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.container {
+    width: 400px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.chesston-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.balance {
+    font-size: 18px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.username {
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.language {
+    font-size: 16px;
+    background-color: #e0e0e0;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.time {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.players {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.player {
+    display: flex;
+    flex-direction: column;
+}
+
+.player-name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.player-rating {
+    font-size: 14px;
+}
+
+.actions {
+    display: flex;
+    justify-content: space-around;
+}
+
+.action-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.board-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(8, 50px);
+    grid-template-rows: repeat(8, 50px);
+}
+
+.square {
+    width: 50px;
+    height: 50px;
+    font-size: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.white {
+    background-color: #f0d9b5;
+}
+
+.black {
+    background-color: #b58863;
+}
+
+.ranks, .files {
+    display: flex;
+    justify-content: space-around;
+}
+
+.ranks {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: 10px;
+}
+
+.files {
+    flex-direction: row;
+    margin-top: 10px;
+    justify-content: space-around;
+}
+
+.new-game-button {
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.footer-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
