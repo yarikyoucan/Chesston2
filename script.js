@@ -1,3 +1,24 @@
+const gameButton = document.getElementById("game-button");
+const walletButton = document.getElementById("wallet-button");
+const rectangle = document.getElementById("rectangle");
+const walletPage = document.getElementById("wallet-page");
+
+if (gameButton) {
+    gameButton.addEventListener("click", () => {
+        rectangle.style.display = "flex";
+        walletPage.style.display = "none";
+    });
+}
+
+if (walletButton) {
+    walletButton.addEventListener("click", () => {
+        rectangle.style.display = "none";
+        walletPage.style.display = "block";
+    });
+}
+
+// Створення шахової дошки
+function createChessboard() {
 document.addEventListener("DOMContentLoaded", function() {
     const board = document.querySelector(".board");
     const figures = [
