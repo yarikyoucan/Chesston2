@@ -12,25 +12,19 @@
   </button>
 
   <!-- Підключення Adsgram SDK -->
-  <script src="https://adsgram.ai/js/adsgram.js"></script>
-  <script>
-    // Ініціалізація Adsgram
-    const adController = window.Adsgram.init({
-      adUnitId: "YOUR_AD_UNIT_ID" // заміни на свій ID
-    });
+<script>
+  const adController = window.Adsgram.init({
+    adUnitId: "int-13878" // твій ID з Adsgram
+  });
 
-    // Показ реклами при натисканні
-    document.getElementById("watchAdBtn").addEventListener("click", () => {
-      adController.show()
-        .then(() => {
-          alert("Дякуємо за перегляд реклами!");
-        })
-        .catch((err) => {
-          console.error("Реклама не показана:", err);
-          alert("Не вдалося показати рекламу.");
-        });
-    });
-  </script>
-
-</body>
-</html>
+  document.getElementById("watchAdBtn").addEventListener("click", () => {
+    adController.show()
+      .then(() => {
+        alert("Дякуємо за перегляд реклами!");
+      })
+      .catch((err) => {
+        console.error("Реклама не показана:", err);
+        alert("Не вдалося показати рекламу.");
+      });
+  });
+</script>
