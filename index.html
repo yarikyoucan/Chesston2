@@ -1,61 +1,36 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chesston</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дивитись рекламу</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <span class="chesston-title">Chesston</span>
-                <span class="balance">0.0 TON</span>
-            </div>
-            <div class="header-right">
-                <span class="username">Тут показує нік користувача</span>
-                <span class="language">UA</span>
-            </div>
-        </div>
-        <div class="game-info">
-            <div class="time">Time: 10:00</div>
-            <div class="players">
-                <div class="player">
-                    <span class="player-name">Чорні Nick name</span>
-                    <span class="player-rating">Рейтинг: 1500</span>
-                </div>
-                <div class="player">
-                    <span class="player-name">Білі Nick name</span>
-                    <span class="player-rating">Рейтинг: 1500</span>
-                </div>
-            </div>
-            <div class="actions">
-                <button class="action-button">Cive up</button>
-                <button class="action-button">Draw</button>
-            </div>
-        </div>
-        <div class="board-container">
-            <div class="ranks">
-                <span>8</span>
-                <span>7</span>
-                <span>6</span>
-                <span>5</span>
-                <span>4</span>
-                <span>3</span>
-                <span>2</span>
-                <span>1</span>
-            </div>
-        <button class="new-game-button">new game (watch add)</button>
-        <div class="footer">
-            <button class="footer-button">Гра</button>
-            <button class="footer-button" id="wallet-button">Гаманець</button>
-        </div>
-        <div id="wallet-page" style="display: none;">
-            <h1>Гаманець</h1>
-            <p>Тут буде відображатися інформація про гаманець.</p>
-        </div>
-    </div>
-    <script src="script.js"></script>
+<body style="display:flex;justify-content:center;align-items:center;height:100vh;background:#f5f5f5;">
+
+  <button id="watchAdBtn" style="padding:15px 25px;font-size:18px;border:none;background:#4CAF50;color:white;border-radius:8px;cursor:pointer;">
+    Дивитись рекламу
+  </button>
+
+  <!-- Підключення Adsgram SDK -->
+  <script src="https://adsgram.ai/js/adsgram.js"></script>
+  <script>
+    // Ініціалізація Adsgram
+    const adController = window.Adsgram.init({
+      adUnitId: "YOUR_AD_UNIT_ID" // заміни на свій ID
+    });
+
+    // Показ реклами при натисканні
+    document.getElementById("watchAdBtn").addEventListener("click", () => {
+      adController.show()
+        .then(() => {
+          alert("Дякуємо за перегляд реклами!");
+        })
+        .catch((err) => {
+          console.error("Реклама не показана:", err);
+          alert("Не вдалося показати рекламу.");
+        });
+    });
+  </script>
+
 </body>
 </html>
