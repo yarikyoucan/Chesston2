@@ -150,7 +150,7 @@
       <button id="subscribeBtn" onclick="subscribe()">Перейти</button>
     </div>
     <div class="task" id="task50">
-      <span>🎯 Набери 50 очків (+10⭐)</span>
+      <span>🎯 Досягни рекорду 50 (+10⭐)</span>
       <button id="checkTask50">Перевірити</button>
     </div>
   </div>
@@ -246,19 +246,18 @@
       saveData();
     }
 
-    // Завдання "Набери 50 очків"
+    // Завдання "Досягни рекорду 50"
     document.getElementById("checkTask50").addEventListener("click", () => {
-      let score = parseInt(document.getElementById("score").innerText);
       let btn = document.getElementById("checkTask50");
 
-      if (score >= 50 && !task50Completed) {
+      if (highscore >= 50 && !task50Completed) {
         addBalance(10);
         btn.innerText = "Виконано";
         btn.classList.add("done");
         task50Completed = true;
         saveData();
-      } else if (score < 50) {
-        alert("❌ Твій результат замалий (потрібно 50+)");
+      } else if (highscore < 50) {
+        alert("❌ Твій рекорд замалий (потрібно 50+)");
       }
     });
 
@@ -273,4 +272,5 @@
   </script>
 </body>
 </html>
+
 
