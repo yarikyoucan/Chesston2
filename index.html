@@ -3,63 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stack Game</title>
+  <title>Stack Game + AdsGram</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; height: 100vh; display: flex; flex-direction: column; }
     .page { flex: 1; display: none; overflow: auto; padding: 10px; }
     .page.active { display: block; }
-    .menu {
-      display: flex; justify-content: space-around;
-      border-top: 1px solid #ccc; background: #fff; padding: 10px 0;
-    }
-    .menu button {
-      flex: 1; background: none; border: none; font-size: 22px; cursor: pointer;
-    }
+    .menu { display: flex; justify-content: space-around; border-top: 1px solid #ccc; background: #fff; padding: 10px 0; }
+    .menu button { flex: 1; background: none; border: none; font-size: 22px; cursor: pointer; }
     .menu button.active { color: green; font-weight: bold; }
-    .task {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #fff; padding: 15px; margin: 10px auto; border-radius: 10px;
-      width: 90%; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .task button {
-      background: #007bff; color: #fff; border: none;
-      padding: 8px 12px; border-radius: 6px; cursor: pointer;
-    }
+    .task { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px; margin: 10px auto; border-radius: 10px; width: 90%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .task button { background: #007bff; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
     .task button.done { background: #28a745; }
     .balance { font-size: 20px; margin-bottom: 20px; text-align: center; }
-    #container canvas {
-      position: absolute !important; top: 0; left: 0;
-      width: 100% !important; height: 100% !important; z-index: 1;
-    }
-    #scoreboard {
-      position: absolute; top: 10px; left: 10px;
-      display: flex; gap: 10px; z-index: 2;
-    }
-    #score, #highscore {
-      background: rgba(0,0,0,0.5); color: #fff;
-      padding: 5px 10px; border-radius: 6px;
-    }
-    #instructions {
-      position: absolute; top: 50px; left: 10px;
-      color: #000; font-size: 16px;
-      background: rgba(255,255,255,0.7); padding: 4px 8px; border-radius: 6px;
-      z-index: 2;
-    }
-    .game-over, .ready {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center; background: rgba(255,255,255,0.95);
-      padding: 20px; border-radius: 10px; display: none; z-index: 3;
-    }
+    #container canvas { position: absolute !important; top: 0; left: 0; width: 100% !important; height: 100% !important; z-index: 1; }
+    #scoreboard { position: absolute; top: 10px; left: 10px; display: flex; gap: 10px; z-index: 2; }
+    #score, #highscore { background: rgba(0,0,0,0.5); color: #fff; padding: 5px 10px; border-radius: 6px; }
+    #instructions { position: absolute; top: 50px; left: 10px; color: #000; font-size: 16px; background: rgba(255,255,255,0.7); padding: 4px 8px; border-radius: 6px; z-index: 2; }
+    .game-over, .ready { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 10px; display: none; z-index: 3; }
+    #start-button { font-size: 20px; padding: 10px 20px; background: green; color: #fff; border-radius: 8px; cursor: pointer; }
   </style>
-  <!-- SDK AdsGram -->
+
+  <!-- Three.js + GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- AdsGram SDK -->
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 </head>
 <body>
@@ -71,7 +39,7 @@
         <div id="score">0</div>
         <div id="highscore">🏆 0</div>
       </div>
-      <div id="instructions">Клік або пробіл, щоб поставити блок...</div>
+      <div id="instructions">Клік або пробіл, щоб поставити блок. Після гри — клік для рестарту.</div>
       <div class="game-over">
         <h2>Гра закінчена</h2>
         <p>Ти молодець 👍</p>
@@ -114,33 +82,13 @@
     <button onclick="showPage('friends', this)">👥</button>
   </div>
 
-  <!-- Скрипти -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
-  <script src="./script.js"></script> <!-- твоя логіка гри -->
-
+  <!-- ======= JS Логіка ======= -->
   <script>
+    // === AdsGram init ===
+    const AdController = window.Adsgram.init({ blockId: "int-13878" });
+
     let balance = 0, subscribed = false, task50Completed = false, highscore = 0;
 
-    // === AdsGram ===
-    const AdController = window.Adsgram.init({ blockId: "int-13928" });
-
-    // Показ реклами після закінчення гри
-    function showAd() {
-      AdController.show().then((result) => {
-        console.log("Ad done/closed:", result);
-      }).catch((err) => {
-        console.warn("Ad error:", err);
-      });
-    }
-
-    // Викликай цю функцію після GameOver у script.js
-    function onGameOver(finalScore) {
-      updateHighscore(finalScore);
-      showAd(); // показ реклами
-    }
-
-    // === LocalStorage ===
     window.onload = function () {
       if (localStorage.getItem("balance")) {
         balance = parseInt(localStorage.getItem("balance"));
@@ -181,7 +129,8 @@
         window.open("https://t.me/stackofficialgame", "_blank");
         let btn = document.getElementById("subscribeBtn");
         btn.innerText = "Виконано"; btn.classList.add("done");
-        subscribed = true; addBalance(1); saveData();
+        subscribed = true;
+        addBalance(1); saveData();
       }
     }
 
@@ -194,8 +143,7 @@
     document.getElementById("checkTask50").addEventListener("click", () => {
       let btn = document.getElementById("checkTask50");
       if (highscore >= 50 && !task50Completed) {
-        addBalance(10);
-        btn.innerText = "Виконано"; btn.classList.add("done");
+        addBalance(10); btn.innerText = "Виконано"; btn.classList.add("done");
         task50Completed = true; saveData();
       } else if (highscore < 50) {
         alert("❌ Твій рекорд замалий (потрібно 50+)");
@@ -209,7 +157,41 @@
         document.getElementById("highscore").innerText = "🏆 " + highscore;
       }
     }
+
+    // === Логіка гри (спрощена) ===
+    let gameOverEl = document.querySelector(".game-over");
+    let startEl = document.querySelector(".ready");
+    let scoreEl = document.getElementById("score");
+    let score = 0;
+
+    function startGame() {
+      score = 0; scoreEl.textContent = score;
+      gameOverEl.style.display = "none";
+      startEl.style.display = "none";
+      // Тут мала б бути твоя логіка 3D (Three.js)
+      // Для тесту зроблю авто-гейм-овер через 5 секунд
+      setTimeout(endGame, 5000);
+    }
+
+    function endGame() {
+      updateHighscore(score);
+      gameOverEl.style.display = "block";
+
+      // === Показ реклами ===
+      AdController.show().then((result) => {
+        console.log("Ad finished/closed", result);
+      }).catch((err) => {
+        console.warn("Ad error", err);
+      }).finally(() => {
+        console.log("Ad finished (success/skip/error)");
+      });
+    }
+
+    document.getElementById("start-button").addEventListener("click", startGame);
+    document.body.addEventListener("keydown", e => { if (e.code === "Space" && gameOverEl.style.display === "block") startGame(); });
+    document.body.addEventListener("click", () => { if (gameOverEl.style.display === "block") startGame(); });
   </script>
 </body>
 </html>
+
 
