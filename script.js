@@ -289,6 +289,7 @@ class Game {
     endGame() {
         this.updateState(this.STATES.ENDED);
     }
+    updateHighscore(currentScore);
     tick() {
         this.blocks[this.blocks.length - 1].tick();
         this.stage.render();
