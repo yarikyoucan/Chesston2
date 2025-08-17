@@ -135,7 +135,7 @@ class Game {
         this.STATES = { 'LOADING': 'loading', 'PLAYING': 'playing', 'READY': 'ready', 'ENDED': 'ended', 'RESETTING': 'resetting' };
         this.blocks = [];
         this.state = this.STATES.LOADING;
-        this.isPaused = false; // прапор паузи
+        this.isPaused = false;
         this.stage = new Stage();
         this.mainContainer = document.getElementById('container');
         this.scoreContainer = document.getElementById('score');
@@ -167,11 +167,10 @@ class Game {
 
         document.addEventListener('touchstart', e => e.preventDefault());
 
-        // Слухаємо перемикання вкладок
         document.querySelectorAll('.tab-link').forEach(btn => {
             btn.addEventListener('click', () => {
                 const activeTab = document.querySelector('.tab-content.active');
-                this.isPaused = activeTab.id !== "game"; // якщо не гра → пауза
+                this.isPaused = activeTab.id !== "game";
             });
         });
     }
@@ -252,9 +251,20 @@ class Game {
         this.updateState(this.STATES.ENDED);
         let currentScore = parseInt(this.scoreContainer.innerText);
         updateHighscore(currentScore);
+
+        // показ реклами після поразки
+        if (typeof AdController !== "undefined" && AdController.show) {
+            AdController.show()
+                .then(() => {
+                    console.log("✅ Реклама показана після поразки");
+                })
+                .catch(err => {
+                    console.warn("⚠️ Помилка показу реклами:", err);
+                });
+        }
     }
     tick() {
-        if (!this.isPaused) {   // перевірка паузи
+        if (!this.isPaused) {
             this.blocks[this.blocks.length - 1].tick();
             this.stage.render();
         }
