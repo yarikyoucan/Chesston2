@@ -3,36 +3,20 @@ console.clear();
 
 class Stage {
     constructor() {
-        // container
-        this.render = function () {
-            this.renderer.render(this.scene, this.camera);
-        };
-        this.add = function (elem) {
-            this.scene.add(elem);
-        };
-        this.remove = function (elem) {
-            this.scene.remove(elem);
-        };
+        this.render = function () { this.renderer.render(this.scene, this.camera); };
+        this.add = function (elem) { this.scene.add(elem); };
+        this.remove = function (elem) { this.scene.remove(elem); };
         this.container = document.getElementById('game');
-        // renderer
-        this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
-            alpha: false
-        });
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor('#D0CBC7', 1);
         this.container.appendChild(this.renderer.domElement);
-        // scene
         this.scene = new THREE.Scene();
-        // camera
         let aspect = window.innerWidth / window.innerHeight;
         let d = 20;
         this.camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -100, 1000);
-        this.camera.position.x = 2;
-        this.camera.position.y = 2;
-        this.camera.position.z = 2;
+        this.camera.position.set(2, 2, 2);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
-        //light
         this.light = new THREE.DirectionalLight(0xffffff, 0.5);
         this.light.position.set(0, 499, 0);
         this.scene.add(this.light);
@@ -88,7 +72,7 @@ class Block {
         this.direction = this.speed;
         let geometry = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
         geometry.applyMatrix(new THREE.Matrix4().makeTranslation(this.dimension.width / 2, this.dimension.height / 2, this.dimension.depth / 2));
-        this.material = new THREE.MeshToonMaterial({ color: this.color, shading: THREE.FlatShading });
+        this.material = new THREE.MeshToonMaterial({ color: this.color });
         this.mesh = new THREE.Mesh(geometry, this.material);
         this.mesh.position.set(this.position.x, this.position.y, this.position.z);
         if (this.state == this.STATES.ACTIVE) {
@@ -151,6 +135,7 @@ class Game {
         this.STATES = { 'LOADING': 'loading', 'PLAYING': 'playing', 'READY': 'ready', 'ENDED': 'ended', 'RESETTING': 'resetting' };
         this.blocks = [];
         this.state = this.STATES.LOADING;
+        this.isPaused = false; // <<< прапор паузи
         this.stage = new Stage();
         this.mainContainer = document.getElementById('container');
         this.scoreContainer = document.getElementById('score');
@@ -167,21 +152,24 @@ class Game {
         this.tick();
         this.updateState(this.STATES.READY);
 
-        // 👉 реагуємо лише коли активна вкладка "гра"
         document.addEventListener('keydown', e => {
-            if (e.keyCode == 32 && document.getElementById("game").classList.contains("active")) {
-                this.onAction();
-            }
+            if (!this.isPaused && e.keyCode == 32) this.onAction();
         });
         document.addEventListener('click', e => {
-            if (document.getElementById("game").classList.contains("active")) {
-                this.onAction();
-            }
+            if (!this.isPaused) this.onAction();
         });
-        document.addEventListener('touchstart', e => {
-            e.preventDefault();
+
+        document.addEventListener('touchstart', e => e.preventDefault());
+
+        // Слухаємо перемикання вкладок
+        document.querySelectorAll('.tab-link').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const activeTab = document.querySelector('.tab-content.active');
+                this.isPaused = activeTab.id !== "game"; // якщо не гра → пауза
+            });
         });
     }
+
     updateState(newState) {
         for (let key in this.STATES) this.mainContainer.classList.remove(this.STATES[key]);
         this.mainContainer.classList.add(newState);
@@ -256,16 +244,17 @@ class Game {
     }
     endGame() {
         this.updateState(this.STATES.ENDED);
-
-        // Беремо поточний рахунок і оновлюємо рекорд
         let currentScore = parseInt(this.scoreContainer.innerText);
         updateHighscore(currentScore);
     }
     tick() {
-        this.blocks[this.blocks.length - 1].tick();
-        this.stage.render();
+        if (!this.isPaused) {   // <<< перевірка паузи
+            this.blocks[this.blocks.length - 1].tick();
+            this.stage.render();
+        }
         requestAnimationFrame(() => { this.tick(); });
     }
 }
 
 let game = new Game();
+
