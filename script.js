@@ -166,11 +166,17 @@ class Game {
         this.addBlock();
         this.tick();
         this.updateState(this.STATES.READY);
+
+        // 👉 реагуємо лише коли активна вкладка "гра"
         document.addEventListener('keydown', e => {
-            if (e.keyCode == 32) this.onAction();
+            if (e.keyCode == 32 && document.getElementById("game").classList.contains("active")) {
+                this.onAction();
+            }
         });
         document.addEventListener('click', e => {
-            this.onAction();
+            if (document.getElementById("game").classList.contains("active")) {
+                this.onAction();
+            }
         });
         document.addEventListener('touchstart', e => {
             e.preventDefault();
