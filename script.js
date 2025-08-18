@@ -71,7 +71,7 @@ function showPage(id, btn){
 }
 window.showPage = showPage;
 
-/* ====== ADSGRAM (interstitial int-13956) ====== */
+/* ====== ADSGRAM (interstitial int-13957) ====== */
 let AdController = null;
 const ADS_COOLDOWN_MS = 60_000;   // захист від занадто частих показів
 let lastAdAt = 0;
@@ -79,7 +79,7 @@ let lastAdAt = 0;
 function initAds(){
   if (!window.Adsgram) { console.warn("Adsgram SDK не завантажився"); return; }
   AdController = window.Adsgram.init({
-    blockId: "int-13956",  // твій blockId
+    blockId: "int-13957",  // твій blockId
     debug: true
     // debugBannerType: "FullscreenMedia" // <- увімкни на час тесту, щоб бачити тестовий показ
   });
