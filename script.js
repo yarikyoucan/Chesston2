@@ -51,19 +51,21 @@ function initAds() {
     return;
   }
   AdController = window.Adsgram.init({
-    blockId: "YOUR_BLOCK_ID", // <-- заміни на свій blockId
-    debug: true               // у продакшені постав false
+    blockId: "int-13878",  // <-- твій blockId
+    debug: true            // у проді постав false
   });
 }
-async function showAdAndMaybeRevive() {
+async function showAdAndMaybeRevive(auto = false) {
   if (!AdController) { console.warn("AdController не ініціалізовано"); return; }
   try {
     const result = await AdController.show();
+    // Якщо користувач додивився — даємо нагороду (revive + зірки)
     if (result && result.done) {
-      // нагорода за перегляд
       addBalance(3);
-      // простий "revive": перезапустити гру
-      game.restartGame();
+      if (auto) {
+        // авто-ревів: одразу стартуємо
+        game.restartGame();
+      }
     }
   } catch (e) {
     console.warn("Реклама не показана:", e);
@@ -247,7 +249,10 @@ class Game {
     // кнопки
     document.getElementById('start-button').addEventListener('click', () => this.onAction());
     document.getElementById('restart-btn').addEventListener('click', () => this.restartGame());
-    document.getElementById('watch-ad-btn').addEventListener('click', () => showAdAndMaybeRevive());
+    document.getElementById('watch-ad-btn').addEventListener('click', () => showAdAndMaybeRevive(false));
+
+    // прапорець, щоб авто-реклама не повторювалась у цьому циклі завершення
+    this.adShownThisEnd = false;
   }
 
   updateState(newState){
@@ -267,6 +272,7 @@ class Game {
       this.scoreContainer.innerHTML = '0';
       this.updateState(this.STATES.PLAYING);
       this.addBlock();
+      this.adShownThisEnd = false; // скидаємо прапор для наступного завершення
     }
   }
   restartGame(){
@@ -324,14 +330,13 @@ class Game {
     this.updateState(this.STATES.ENDED);
     const currentScore = parseInt(document.getElementById('score').innerText, 10);
     updateHighscore(currentScore);
-    // показ реклами робимо з кнопки "Подивитись рекламу"
-  }
-  tick(){
-    if (!this.isPaused) {
-      this.blocks[this.blocks.length - 1].tick();
-      this.stage.render();
+
+    // автопоказ реклами один раз за завершення
+    if (!this.adShownThisEnd) {
+      this.adShownThisEnd = true;
+      // auto=true → у разі успішного перегляду одразу робимо revive (restartGame)
+      showAdAndMaybeRevive(true);
     }
-    requestAnimationFrame(()=>this.tick());
   }
 }
 
@@ -354,4 +359,5 @@ window.addEventListener('DOMContentLoaded', () => {
   initAds();              // Adsgram
   window.game = new Game();
 });
+
 
