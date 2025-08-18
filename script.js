@@ -76,7 +76,7 @@ let AdController = null;
 function initAds(){
   if (!window.Adsgram) { console.warn("Adsgram SDK не завантажився"); return; }
   AdController = window.Adsgram.init({
-    blockId: "int-13878",  // твій blockId
+    blockId: "int-13956",  // твій blockId
     debug: true            // у проді вимкни
   });
 }
