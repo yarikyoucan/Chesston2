@@ -5,15 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Stack Game</title>
 
-  <!-- Бібліотеки -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
-  <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-  <script src="https://sad.adsgram.ai/js/sad.min.js" defer></script>
-
   <style>
-    :root { --ui-bg:#fff; --shadow:0 2px 5px rgba(0,0,0,0.1); }
-    * { box-sizing:border-box; }
     body { margin:0; font-family:Arial, sans-serif; background:#f4f4f4; display:flex; flex-direction:column; height:100vh; }
     .page { flex:1; display:none; overflow:auto; padding:10px; }
     .page.active { display:block; }
@@ -21,61 +13,49 @@
     .menu button { flex:1; background:none; border:none; font-size:22px; cursor:pointer; }
     .menu button.active { color:green; font-weight:bold; }
 
-    /* Ігрова зона */
+    .task { display:flex; justify-content:space-between; align-items:center; background:#fff; padding:15px; margin:10px auto; border-radius:10px; width:90%; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+    .task button { background:#007bff; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    .task button.done { background:#28a745; }
+    .balance { font-size:20px; margin-bottom:20px; text-align:center; }
+
     #container { position:relative; width:100%; height:100%; overflow:hidden; background:#d0cbc7; }
-    #container canvas { position:absolute!important; top:0; left:0; width:100%!important; height:100%!important; z-index:1; }
+    #container canvas { position:absolute !important; top:0; left:0; width:100% !important; height:100% !important; z-index:1; }
+
     #scoreboard { position:absolute; top:10px; left:10px; display:flex; gap:10px; z-index:2; }
     #score, #highscore { background:rgba(0,0,0,0.5); color:#fff; padding:5px 10px; border-radius:6px; }
     #instructions { position:absolute; top:50px; left:10px; color:#000; font-size:16px; background:rgba(255,255,255,0.7); padding:4px 8px; border-radius:6px; z-index:2; }
     .hide { display:none; }
 
-    /* Модалки */
     .game-over, .ready {
       position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
       text-align:center; background:rgba(255,255,255,0.95);
-      padding:20px; border-radius:10px; display:none; z-index:3; box-shadow:var(--shadow); min-width:260px;
+      padding:20px; border-radius:10px; display:none; z-index:3; min-width:260px;
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
     }
-    #container.ready .ready { display:block; }
-    #container.ended .game-over { display:block; }
-
-    .btn { display:inline-block; margin-top:10px; padding:10px 14px; border-radius:8px; background:#007bff; color:#fff; border:none; cursor:pointer; }
-    .btn.secondary { background:#6c757d; }
-
-    /* Завдання / Баланс */
-    .task { display:flex; justify-content:space-between; align-items:center; background:#fff; padding:15px; margin:10px auto; border-radius:10px; width:90%; box-shadow:var(--shadow); }
-    .task button { background:#007bff; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
-    .task button.done { background:#28a745; }
-    .balance { font-size:20px; margin-bottom:20px; text-align:center; }
   </style>
 </head>
-
 <body>
-  <!-- PAGE: GAME -->
+
   <div id="game" class="page active">
     <div id="container">
       <div id="scoreboard">
         <div id="score">0</div>
         <div id="highscore">🏆 0</div>
       </div>
-      <div id="instructions">Клік або пробіл — поставити блок. Після завершення — клікни, щоб зіграти ще.</div>
+      <div id="instructions">Клік або пробіл — поставити блок. Після завершення — клікни/пробіл, щоб зіграти ще.</div>
 
-      <div class="ready">
-        <h2>▶ Готовий?</h2>
-        <button id="start-button" class="btn">Старт</button>
+      <div class="game-over" id="gameOver">
+        <h2>Гра закінчена</h2>
+        <p>Ти молодець 👍</p>
+        <p>Клікни або натисни пробіл, щоб почати знову</p>
       </div>
 
-      <div class="game-over">
-        <h2>Гру закінчено</h2>
-        <p>Ти молодець 👍</p>
-        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-          <button id="watch-ad-btn" class="btn">Подивитись рекламу (revive)</button>
-          <button id="restart-btn" class="btn secondary">Почати знову</button>
-        </div>
+      <div class="ready" id="ready">
+        <div id="start-button" style="cursor:pointer;">▶ Старт</div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE: TASKS -->
   <div id="tasks" class="page">
     <h2>📋 Завдання</h2>
     <div class="task">
@@ -88,20 +68,17 @@
     </div>
   </div>
 
-  <!-- PAGE: TOURNAMENTS -->
   <div id="tournaments" class="page">
     <h2>🏆 Турніри</h2>
     <p>Список топів👇(рекорд)</p>
   </div>
 
-  <!-- PAGE: FRIENDS -->
   <div id="friends" class="page">
     <div class="balance">Баланс ⭐ <span id="balance">0</span></div>
     <h2>👥 Друзі</h2>
     <p>Список друзів знизу 👇</p>
   </div>
 
-  <!-- BOTTOM MENU -->
   <div class="menu">
     <button onclick="showPage('game', this)" class="active">🎮</button>
     <button onclick="showPage('tasks', this)">✏️</button>
@@ -109,8 +86,18 @@
     <button onclick="showPage('friends', this)">👥</button>
   </div>
 
-  <!-- Твій скрипт -->
-  <script src="./script.js" defer></script>
+  <!-- Лібки як у “працювало”: three r83 + TweenMax -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+
+  <!-- Оновлений Adsgram SDK -->
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+  <!-- (опційно) Telegram SDK, якщо відкриваєш у Telegram WebView -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Твій логічний код гри -->
+  <script src="./script.js"></script>
 </body>
 </html>
 
