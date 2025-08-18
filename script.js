@@ -1,116 +1,128 @@
 "use strict";
 console.clear();
 
-/* ====== ГЛОБАЛЬНИЙ СТАН (баланс/рекорди/завдання) ====== */
+/* ====== СТАН КОРИСТУВАЧА ====== */
 let balance = 0, subscribed = false, task50Completed = false, highscore = 0;
+let isPaused = false;
 
-function loadData() {
+/* ====== UI HELPERS ====== */
+function $(id){ return document.getElementById(id); }
+
+window.onload = function () {
+  // відновлення
   balance = parseInt(localStorage.getItem("balance") || "0", 10);
   subscribed = localStorage.getItem("subscribed") === "true";
   task50Completed = localStorage.getItem("task50Completed") === "true";
   highscore = parseInt(localStorage.getItem("highscore") || "0", 10);
-  document.getElementById("balance").innerText = balance;
-  document.getElementById("highscore").innerText = "🏆 " + highscore;
-  const subBtn = document.getElementById("subscribeBtn");
-  if (subBtn && subscribed) { subBtn.innerText = "Виконано"; subBtn.classList.add("done"); }
-  const t50 = document.getElementById("checkTask50");
-  if (t50 && task50Completed) { t50.innerText = "Виконано"; t50.classList.add("done"); }
-}
-function saveData() {
+  $("balance").innerText = balance;
+  $("highscore").innerText = "🏆 " + highscore;
+
+  // кнопки завдань
+  const subBtn = $("subscribeBtn");
+  if (subscribed) { subBtn.innerText = "Виконано"; subBtn.classList.add("done"); }
+  subBtn.addEventListener("click", subscribe);
+
+  const t50 = $("checkTask50");
+  if (task50Completed) { t50.innerText = "Виконано"; t50.classList.add("done"); }
+  t50.addEventListener("click", () => {
+    if (highscore >= 50 && !task50Completed) {
+      addBalance(10);
+      t50.innerText = "Виконано"; t50.classList.add("done");
+      task50Completed = true; saveData();
+    } else if (highscore < 50) {
+      alert("❌ Твій рекорд замалий (потрібно 50+)");
+    }
+  });
+
+  initAds();         // ініціалізація Adsgram
+  window.game = new Game();   // стартуємо гру (у стані READY)
+};
+
+function saveData(){
   localStorage.setItem("balance", balance);
   localStorage.setItem("subscribed", subscribed);
   localStorage.setItem("task50Completed", task50Completed);
   localStorage.setItem("highscore", highscore);
 }
-function addBalance(amount) { balance += amount; document.getElementById("balance").innerText = balance; saveData(); }
-function updateHighscore(currentScore) {
-  if (currentScore > highscore) {
-    highscore = currentScore;
-    localStorage.setItem("highscore", String(highscore));
-    document.getElementById("highscore").innerText = "🏆 " + highscore;
-  }
-}
-function subscribe() {
+function addBalance(n){ balance += n; $("balance").innerText = balance; saveData(); }
+function subscribe(){
   if (subscribed) return;
   const url = "https://t.me/stackofficialgame";
-  if (window.Telegram?.WebApp?.openTelegramLink) {
-    Telegram.WebApp.openTelegramLink(url);
-  } else {
-    window.open(url, "_blank");
-  }
-  const btn = document.getElementById("subscribeBtn");
-  btn.innerText = "Виконано"; btn.classList.add("done");
-  subscribed = true; addBalance(1); saveData();
+  if (window.Telegram?.WebApp?.openTelegramLink) Telegram.WebApp.openTelegramLink(url);
+  else window.open(url, "_blank");
+  subscribed = true; addBalance(1);
+  const btn = $("subscribeBtn"); btn.innerText="Виконано"; btn.classList.add("done"); saveData();
 }
-
-/* ====== Adsgram ====== */
-let AdController = null;
-function initAds() {
-  if (!window.Adsgram) {
-    console.warn("Adsgram SDK не завантажився");
-    return;
-  }
-  AdController = window.Adsgram.init({
-    blockId: "int-13878",  // <-- твій blockId
-    debug: true            // у проді постав false
-  });
-}
-async function showAdAndMaybeRevive(auto = false) {
-  if (!AdController) { console.warn("AdController не ініціалізовано"); return; }
-  try {
-    const result = await AdController.show();
-    // Якщо користувач додивився — даємо нагороду (revive + зірки)
-    if (result && result.done) {
-      addBalance(3);
-      if (auto) {
-        // авто-ревів: одразу стартуємо
-        game.restartGame();
-      }
-    }
-  } catch (e) {
-    console.warn("Реклама не показана:", e);
+function updateHighscore(currentScore){
+  if (currentScore > highscore){
+    highscore = currentScore;
+    localStorage.setItem("highscore", String(highscore));
+    $("highscore").innerText = "🏆 " + highscore;
   }
 }
 
-/* ====== Навігація сторінками ====== */
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  // пауза гри поза вкладкою "game"
-  if (window.game) game.isPaused = (id !== 'game');
+/* ====== Навігація по вкладках ====== */
+function showPage(id, btn){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  $(id).classList.add("active");
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  isPaused = (id !== "game");
 }
 window.showPage = showPage;
 
-/* ====== 3D СЦЕНА + ЛОГІКА ГРИ ====== */
+/* ====== ADSGRAM ====== */
+let AdController = null;
+function initAds(){
+  if (!window.Adsgram) { console.warn("Adsgram SDK не завантажився"); return; }
+  AdController = window.Adsgram.init({
+    blockId: "int-13878",  // твій blockId
+    debug: true            // у проді вимкни
+  });
+}
+// показ реклами, повертає проміс; якщо користувач додивився — result.done === true
+async function showAdOnce(){
+  if (!AdController) return false;
+  try {
+    const res = await AdController.show();
+    return !!(res && res.done);
+  } catch(e){
+    console.warn("Реклама не показана:", e);
+    return false;
+  }
+}
+
+/* ====== 3D СЦЕНА + ЛОГІКА STACK ====== */
 class Stage {
-  constructor() {
-    this.render = () => { this.camera.lookAt(this.cameraTarget); this.renderer.render(this.scene, this.camera); };
-    this.add = (elem) => { this.scene.add(elem); };
-    this.remove = (elem) => { this.scene.remove(elem); };
-    this.container = document.getElementById('container');
+  constructor(){
+    this.container = document.getElementById("container");
+    this.scene = new THREE.Scene();
     this.renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor('#D0CBC7', 1);
     this.container.appendChild(this.renderer.domElement);
-    this.scene = new THREE.Scene();
-    const aspect = window.innerWidth / window.innerHeight;
-    const d = 20;
-    this.camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -100, 1000);
-    this.camera.position.set(2, 2, 2);
-    this.cameraTarget = new THREE.Vector3(0, 0, 0);
+
+    const aspect = window.innerWidth / window.innerHeight, d = 20;
+    this.camera = new THREE.OrthographicCamera(-d*aspect, d*aspect, d, -d, -100, 1000);
+    this.camera.position.set(2,2,2);
+    this.cameraTarget = new THREE.Vector3(0,0,0);
     this.camera.lookAt(this.cameraTarget);
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5); this.light.position.set(0, 499, 0); this.scene.add(this.light);
-    this.softLight = new THREE.AmbientLight(0xffffff, 0.4); this.scene.add(this.softLight);
-    window.addEventListener('resize', () => this.onResize());
+
+    this.light = new THREE.DirectionalLight(0xffffff, 0.5); this.light.position.set(0,499,0);
+    this.softLight = new THREE.AmbientLight(0xffffff, 0.4);
+    this.scene.add(this.light); this.scene.add(this.softLight);
+
+    window.addEventListener('resize', ()=>this.onResize());
     this.onResize();
   }
-  setCamera(y, speed = 0.3) {
-    gsap.to(this.camera.position, { y: y + 4, duration: speed, ease: "power1.inOut" });
-    gsap.to(this.cameraTarget, { y: y, duration: speed, ease: "power1.inOut" });
+  add(o){ this.scene.add(o); }
+  remove(o){ this.scene.remove(o); }
+  render(){ this.camera.lookAt(this.cameraTarget); this.renderer.render(this.scene, this.camera); }
+  setCamera(y, speed=0.3){
+    TweenMax.to(this.camera.position, speed, { y: y+4, ease: Power1.easeInOut });
+    TweenMax.to(this.cameraTarget,  speed, { y: y,   ease: Power1.easeInOut });
   }
-  onResize() {
+  onResize(){
     const viewSize = 30;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.camera.left = window.innerWidth / -viewSize;
@@ -122,91 +134,96 @@ class Stage {
 }
 
 class Block {
-  constructor(block) {
+  constructor(prev){
     this.STATES = { ACTIVE:'active', STOPPED:'stopped', MISSED:'missed' };
     this.MOVE_AMOUNT = 12;
-    this.dimension = { width:0, height:0, depth:0 };
-    this.position = { x:0, y:0, z:0 };
-    this.targetBlock = block;
-    this.index = (this.targetBlock ? this.targetBlock.index : 0) + 1;
+
+    this.targetBlock = prev;
+    this.index = (prev ? prev.index : 0) + 1;
     this.workingPlane = this.index % 2 ? 'x' : 'z';
     this.workingDimension = this.index % 2 ? 'width' : 'depth';
-    this.dimension.width  = this.targetBlock ? this.targetBlock.dimension.width  : 10;
-    this.dimension.height = this.targetBlock ? this.targetBlock.dimension.height : 2;
-    this.dimension.depth  = this.targetBlock ? this.targetBlock.dimension.depth  : 10;
-    this.position.x = this.targetBlock ? this.targetBlock.position.x : 0;
-    this.position.y = this.dimension.height * this.index;
-    this.position.z = this.targetBlock ? this.targetBlock.position.z : 0;
-    this.colorOffset = this.targetBlock ? this.targetBlock.colorOffset : Math.round(Math.random()*100);
-    if (!this.targetBlock) {
-      this.color = 0x333344;
-    } else {
-      const offset = this.index + this.colorOffset;
-      const r = Math.sin(0.3*offset)*55 + 200;
-      const g = Math.sin(0.3*offset+2)*55 + 200;
-      const b = Math.sin(0.3*offset+4)*55 + 200;
+
+    this.dimension = {
+      width:  prev ? prev.dimension.width  : 10,
+      height: prev ? prev.dimension.height : 2,
+      depth:  prev ? prev.dimension.depth  : 10
+    };
+    this.position = {
+      x: prev ? prev.position.x : 0,
+      y: this.dimension.height * this.index,
+      z: prev ? prev.position.z : 0
+    };
+
+    this.colorOffset = prev ? prev.colorOffset : Math.round(Math.random()*100);
+    if (!prev){ this.color = 0x333344; }
+    else {
+      const o = this.index + this.colorOffset;
+      const r = Math.sin(0.3*o)*55 + 200, g = Math.sin(0.3*o+2)*55 + 200, b = Math.sin(0.3*o+4)*55 + 200;
       this.color = new THREE.Color(r/255, g/255, b/255);
     }
+
     this.state = this.index > 1 ? this.STATES.ACTIVE : this.STATES.STOPPED;
-    this.speed = -0.1 - (this.index * 0.005);
-    if (this.speed < -4) this.speed = -4;
+    this.speed = -0.1 - (this.index * 0.005); if (this.speed < -4) this.speed = -4;
     this.direction = this.speed;
-    const geometry = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
-    geometry.translate(this.dimension.width/2, this.dimension.height/2, this.dimension.depth/2);
+
+    const geom = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
+    geom.translate(this.dimension.width/2, this.dimension.height/2, this.dimension.depth/2);
     this.material = new THREE.MeshToonMaterial({ color:this.color });
-    this.mesh = new THREE.Mesh(geometry, this.material);
+    this.mesh = new THREE.Mesh(geom, this.material);
     this.mesh.position.set(this.position.x, this.position.y, this.position.z);
-    if (this.state === this.STATES.ACTIVE) {
-      this.position[this.workingPlane] = Math.random() > 0.5 ? -this.MOVE_AMOUNT : this.MOVE_AMOUNT;
+
+    if (this.state===this.STATES.ACTIVE){
+      this.position[this.workingPlane] = Math.random()>0.5 ? -this.MOVE_AMOUNT : this.MOVE_AMOUNT;
     }
   }
   reverseDirection(){ this.direction = this.direction > 0 ? this.speed : Math.abs(this.speed); }
   place(){
     this.state = this.STATES.STOPPED;
     let overlap = this.targetBlock.dimension[this.workingDimension] - Math.abs(this.position[this.workingPlane] - this.targetBlock.position[this.workingPlane]);
-    const blocksToReturn = { plane:this.workingPlane, direction:this.direction };
-    if (this.dimension[this.workingDimension] - overlap < 0.3) {
+    const ret = { plane:this.workingPlane, direction:this.direction };
+
+    if (this.dimension[this.workingDimension] - overlap < 0.3){
       overlap = this.dimension[this.workingDimension];
-      blocksToReturn.bonus = true;
+      ret.bonus = true;
       this.position.x = this.targetBlock.position.x;
       this.position.z = this.targetBlock.position.z;
       this.dimension.width = this.targetBlock.dimension.width;
       this.dimension.depth = this.targetBlock.dimension.depth;
     }
-    if (overlap > 0) {
-      const choppedDimensions = { width:this.dimension.width, height:this.dimension.height, depth:this.dimension.depth };
-      choppedDimensions[this.workingDimension] -= overlap;
+    if (overlap > 0){
+      const choppedDim = { width:this.dimension.width, height:this.dimension.height, depth:this.dimension.depth };
+      choppedDim[this.workingDimension] -= overlap;
       this.dimension[this.workingDimension] = overlap;
 
-      const placedGeometry = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
-      placedGeometry.translate(this.dimension.width/2, this.dimension.height/2, this.dimension.depth/2);
-      const placedMesh = new THREE.Mesh(placedGeometry, this.material);
+      const placedG = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
+      placedG.translate(this.dimension.width/2, this.dimension.height/2, this.dimension.depth/2);
+      const placed = new THREE.Mesh(placedG, this.material);
 
-      const choppedGeometry = new THREE.BoxGeometry(choppedDimensions.width, choppedDimensions.height, choppedDimensions.depth);
-      choppedGeometry.translate(choppedDimensions.width/2, choppedDimensions.height/2, choppedDimensions.depth/2);
-      const choppedMesh = new THREE.Mesh(choppedGeometry, this.material);
+      const choppedG = new THREE.BoxGeometry(choppedDim.width, choppedDim.height, choppedDim.depth);
+      choppedG.translate(choppedDim.width/2, choppedDim.height/2, choppedDim.depth/2);
+      const chopped = new THREE.Mesh(choppedG, this.material);
 
-      const choppedPosition = { x:this.position.x, y:this.position.y, z:this.position.z };
+      const choppedPos = { x:this.position.x, y:this.position.y, z:this.position.z };
       if (this.position[this.workingPlane] < this.targetBlock.position[this.workingPlane]) {
         this.position[this.workingPlane] = this.targetBlock.position[this.workingPlane];
       } else {
-        choppedPosition[this.workingPlane] += overlap;
+        choppedPos[this.workingPlane] += overlap;
       }
 
-      placedMesh.position.set(this.position.x, this.position.y, this.position.z);
-      choppedMesh.position.set(choppedPosition.x, choppedPosition.y, choppedPosition.z);
-      blocksToReturn.placed = placedMesh;
-      if (!blocksToReturn.bonus) blocksToReturn.chopped = choppedMesh;
+      placed.position.set(this.position.x, this.position.y, this.position.z);
+      chopped.position.set(choppedPos.x, choppedPos.y, choppedPos.z);
+      ret.placed = placed;
+      if (!ret.bonus) ret.chopped = chopped;
     } else {
       this.state = this.STATES.MISSED;
     }
     this.dimension[this.workingDimension] = overlap;
-    return blocksToReturn;
+    return ret;
   }
   tick(){
-    if (this.state === this.STATES.ACTIVE) {
-      let value = this.position[this.workingPlane];
-      if (value > this.MOVE_AMOUNT || value < -this.MOVE_AMOUNT) this.reverseDirection();
+    if (this.state===this.STATES.ACTIVE){
+      const v = this.position[this.workingPlane];
+      if (v > this.MOVE_AMOUNT || v < -this.MOVE_AMOUNT) this.reverseDirection();
       this.position[this.workingPlane] += this.direction;
       this.mesh.position[this.workingPlane] = this.position[this.workingPlane];
     }
@@ -214,150 +231,130 @@ class Block {
 }
 
 class Game {
-  constructor() {
+  constructor(){
     this.STATES = { LOADING:'loading', PLAYING:'playing', READY:'ready', ENDED:'ended', RESETTING:'resetting' };
-    this.blocks = []; this.state = this.STATES.LOADING; this.isPaused = false;
+    this.state = this.STATES.LOADING;
+    this.blocks = [];
     this.stage = new Stage();
-    this.mainContainer = document.getElementById('container');
-    this.scoreContainer = document.getElementById('score');
-    this.instructions = document.getElementById('instructions');
-    this.scoreContainer.innerHTML = '0';
 
     this.newBlocks = new THREE.Group();
     this.placedBlocks = new THREE.Group();
     this.choppedBlocks = new THREE.Group();
-    this.stage.add(this.newBlocks);
-    this.stage.add(this.placedBlocks);
-    this.stage.add(this.choppedBlocks);
+    this.stage.add(this.newBlocks); this.stage.add(this.placedBlocks); this.stage.add(this.choppedBlocks);
+
+    this.scoreEl = $("score");
+    this.scoreEl.innerHTML = "0";
 
     this.addBlock();
     this.tick();
-    this.updateState(this.STATES.READY);
+    this.showReady();
 
-    // керування
-    document.addEventListener('keydown', e => {
-      if (!this.isPaused && e.code === "Space") this.onAction();
+    document.addEventListener("keydown", (e)=>{
+      if (isPaused) return;
+      if (e.keyCode === 32) this.onAction();
     });
-    document.addEventListener('click', e => {
-      if (!this.isPaused &&
-          document.getElementById("game").classList.contains("active") &&
-          e.target.tagName.toLowerCase() === "canvas") {
-        this.onAction();
-      }
+    document.addEventListener("click", (e)=>{
+      if (isPaused) return;
+      if ($("game").classList.contains("active") && e.target.tagName.toLowerCase()==="canvas") this.onAction();
     });
 
-    // кнопки
-    document.getElementById('start-button').addEventListener('click', () => this.onAction());
-    document.getElementById('restart-btn').addEventListener('click', () => this.restartGame());
-    document.getElementById('watch-ad-btn').addEventListener('click', () => showAdAndMaybeRevive(false));
-
-    // прапорець, щоб авто-реклама не повторювалась у цьому циклі завершення
-    this.adShownThisEnd = false;
+    $("start-button").addEventListener("click", ()=>this.onAction());
+    this.adShown = false; // прапор для автопоказу реклами раз на Game Over
   }
 
-  updateState(newState){
-    for (const k in this.STATES) this.mainContainer.classList.remove(this.STATES[k]);
-    this.mainContainer.classList.add(newState);
-    this.state = newState;
-  }
+  showReady(){ $("ready").style.display = "block"; $("gameOver").style.display = "none"; this.state = this.STATES.READY; }
+  showGameOver(){ $("gameOver").style.display = "block"; $("ready").style.display = "none"; this.state = this.STATES.ENDED; }
+  hideOverlays(){ $("gameOver").style.display = "none"; $("ready").style.display = "none"; }
+
   onAction(){
-    switch (this.state) {
-      case this.STATES.READY: this.startGame(); break;
+    switch(this.state){
+      case this.STATES.READY:   this.startGame(); break;
       case this.STATES.PLAYING: this.placeBlock(); break;
-      case this.STATES.ENDED: this.restartGame(); break;
+      case this.STATES.ENDED:   this.restartGame(); break;
     }
   }
+
   startGame(){
-    if (this.state !== this.STATES.PLAYING) {
-      this.scoreContainer.innerHTML = '0';
-      this.updateState(this.STATES.PLAYING);
-      this.addBlock();
-      this.adShownThisEnd = false; // скидаємо прапор для наступного завершення
-    }
+    if (this.state === this.STATES.PLAYING) return;
+    this.scoreEl.innerHTML = "0";
+    this.hideOverlays();
+    this.state = this.STATES.PLAYING;
+    this.addBlock();
+    this.adShown = false;
   }
+
   restartGame(){
-    this.updateState(this.STATES.RESETTING);
-    const oldBlocks = [...this.placedBlocks.children];
-    const removeSpeed = 0.2, delayAmount = 0.02;
-    for (let i=0;i<oldBlocks.length;i++){
-      gsap.to(oldBlocks[i].scale, { x:0,y:0,z:0, duration:removeSpeed, delay:(oldBlocks.length - i)*delayAmount, ease:"power1.in", onComplete:()=>this.placedBlocks.remove(oldBlocks[i]) });
-      gsap.to(oldBlocks[i].rotation, { y:0.5, duration:removeSpeed, delay:(oldBlocks.length - i)*delayAmount, ease:"power1.in" });
+    this.state = this.STATES.RESETTING;
+    const old = this.placedBlocks.children.slice();
+    const removeSpeed = 0.2, delay = 0.02;
+    for (let i=0;i<old.length;i++){
+      TweenMax.to(old[i].scale, removeSpeed, { x:0,y:0,z:0, delay:(old.length-i)*delay, ease:Power1.easeIn, onComplete:()=>this.placedBlocks.remove(old[i]) });
+      TweenMax.to(old[i].rotation, removeSpeed, { y:0.5, delay:(old.length-i)*delay, ease:Power1.easeIn });
     }
-    const cameraMoveSpeed = removeSpeed*2 + (oldBlocks.length * delayAmount);
-    this.stage.setCamera(2, cameraMoveSpeed);
-    const countdown = { value:this.blocks.length - 1 };
-    gsap.to(countdown, { value:0, duration:cameraMoveSpeed, onUpdate:()=>{ this.scoreContainer.innerHTML = String(Math.round(countdown.value)); }});
+    const camT = removeSpeed*2 + (old.length * delay);
+    this.stage.setCamera(2, camT);
+    const countdown = { v:this.blocks.length - 1 };
+    TweenMax.to(countdown, camT, { v:0, onUpdate:()=>{ this.scoreEl.innerHTML = String(Math.round(countdown.v)); } });
     this.blocks = this.blocks.slice(0,1);
-    setTimeout(()=>{ this.startGame(); }, cameraMoveSpeed*1000);
+    setTimeout(()=>this.startGame(), camT*1000);
   }
+
   placeBlock(){
-    const currentBlock = this.blocks[this.blocks.length - 1];
-    const newBlocks = currentBlock.place();
-    this.newBlocks.remove(currentBlock.mesh);
-    if (newBlocks.placed) this.placedBlocks.add(newBlocks.placed);
-    if (newBlocks.chopped) {
-      this.choppedBlocks.add(newBlocks.chopped);
-      const positionParams = { y:'-=30', ease:"power1.in", onComplete:()=>this.choppedBlocks.remove(newBlocks.chopped) };
-      const rotateRandomness = 10;
-      const rotationParams = {
+    const cur = this.blocks[this.blocks.length-1];
+    const res = cur.place();
+    this.newBlocks.remove(cur.mesh);
+    if (res.placed) this.placedBlocks.add(res.placed);
+    if (res.chopped){
+      this.choppedBlocks.add(res.chopped);
+      const pos = { y:'-=30', ease:Power1.easeIn, onComplete:()=>this.choppedBlocks.remove(res.chopped) };
+      const rnd = 10;
+      const rot = {
         delay:0.05,
-        x: newBlocks.plane === 'z' ? ((Math.random()*rotateRandomness)-(rotateRandomness/2)) : 0.1,
-        z: newBlocks.plane === 'x' ? ((Math.random()*rotateRandomness)-(rotateRandomness/2)) : 0.1,
-        y: Math.random()*0.1,
-        duration:1
+        x: res.plane==='z' ? ((Math.random()*rnd)-(rnd/2)) : 0.1,
+        z: res.plane==='x' ? ((Math.random()*rnd)-(rnd/2)) : 0.1,
+        y: Math.random()*0.1
       };
-      if (newBlocks.chopped.position[newBlocks.plane] > newBlocks.placed.position[newBlocks.plane]) {
-        positionParams[newBlocks.plane] = '+=' + (40*Math.abs(newBlocks.direction));
-      } else {
-        positionParams[newBlocks.plane] = '-=' + (40*Math.abs(newBlocks.direction));
-      }
-      gsap.to(newBlocks.chopped.position, { ...positionParams, duration:1 });
-      gsap.to(newBlocks.chopped.rotation, rotationParams);
+      if (res.chopped.position[res.plane] > res.placed.position[res.plane]) pos[res.plane] = '+=' + (40*Math.abs(res.direction));
+      else pos[res.plane] = '-=' + (40*Math.abs(res.direction));
+      TweenMax.to(res.chopped.position, 1, pos);
+      TweenMax.to(res.chopped.rotation, 1, rot);
     }
     this.addBlock();
   }
+
   addBlock(){
-    const lastBlock = this.blocks[this.blocks.length - 1];
-    if (lastBlock && lastBlock.state === lastBlock.STATES.MISSED) return this.endGame();
-    document.getElementById('score').innerHTML = String(this.blocks.length - 1);
-    const newKidOnTheBlock = new Block(lastBlock);
-    this.newBlocks.add(newKidOnTheBlock.mesh);
-    this.blocks.push(newKidOnTheBlock);
+    const last = this.blocks[this.blocks.length-1];
+    if (last && last.state===last.STATES.MISSED) return this.endGame();
+
+    this.scoreEl.innerHTML = String(this.blocks.length - 1);
+    const b = new Block(last);
+    this.newBlocks.add(b.mesh);
+    this.blocks.push(b);
     this.stage.setCamera(this.blocks.length * 2);
-    if (this.blocks.length >= 5) this.instructions.classList.add('hide');
+    if (this.blocks.length >= 5) $("instructions").classList.add("hide");
   }
-  endGame(){
-    this.updateState(this.STATES.ENDED);
-    const currentScore = parseInt(document.getElementById('score').innerText, 10);
+
+  async endGame(){
+    this.showGameOver();
+    const currentScore = parseInt(this.scoreEl.innerText, 10);
     updateHighscore(currentScore);
 
-    // автопоказ реклами один раз за завершення
-    if (!this.adShownThisEnd) {
-      this.adShownThisEnd = true;
-      // auto=true → у разі успішного перегляду одразу робимо revive (restartGame)
-      showAdAndMaybeRevive(true);
+    // автопоказ реклами один раз за це завершення (revive, якщо додивився)
+    if (!this.adShown){
+      this.adShown = true;
+      const rewarded = await showAdOnce();
+      if (rewarded){
+        addBalance(3);        // бонус за перегляд
+        this.restartGame();   // "revive"
+      }
     }
   }
-}
 
-/* ====== ІНІЦІАЛІЗАЦІЯ ====== */
-window.addEventListener('DOMContentLoaded', () => {
-  loadData();
-
-  // Завдання
-  document.getElementById("subscribeBtn").addEventListener("click", subscribe);
-  document.getElementById("checkTask50").addEventListener("click", () => {
-    const btn = document.getElementById("checkTask50");
-    if (highscore >= 50 && !task50Completed) {
-      addBalance(10); btn.innerText = "Виконано"; btn.classList.add("done");
-      task50Completed = true; saveData();
-    } else if (highscore < 50) {
-      alert("❌ Твій рекорд замалий (потрібно 50+)");
+  tick(){
+    if (!isPaused){
+      this.blocks[this.blocks.length-1].tick();
+      this.stage.render();
     }
-  });
-
-  initAds();              // Adsgram
-  window.game = new Game();
-});
-
-
+    requestAnimationFrame(()=>this.tick());
+  }
+}
