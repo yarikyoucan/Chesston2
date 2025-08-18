@@ -71,28 +71,48 @@ function showPage(id, btn){
 }
 window.showPage = showPage;
 
-/* ====== ADSGRAM ====== */
+/* ====== ADSGRAM (interstitial int-13956) ====== */
 let AdController = null;
+const ADS_COOLDOWN_MS = 60_000;   // захист від занадто частих показів
+let lastAdAt = 0;
+
 function initAds(){
   if (!window.Adsgram) { console.warn("Adsgram SDK не завантажився"); return; }
   AdController = window.Adsgram.init({
     blockId: "int-13956",  // твій blockId
-    debug: true            // у проді вимкни
+    debug: true
+    // debugBannerType: "FullscreenMedia" // <- увімкни на час тесту, щоб бачити тестовий показ
   });
 }
-// показ реклами, повертає проміс; якщо користувач додивився — result.done === true
-async function showAdOnce(){
-  if (!AdController) return false;
+function inTelegramWebApp() {
+  return !!(window.Telegram && window.Telegram.WebApp);
+}
+async function showInterstitialOnce({ autoRevive = true } = {}){
+  if (!AdController)            return { shown:false, reason:"no_controller" };
+  if (!inTelegramWebApp())      return { shown:false, reason:"not_telegram" };
+  const now = Date.now();
+  if (now - lastAdAt < ADS_COOLDOWN_MS) return { shown:false, reason:"cooldown" };
+
   try {
-    const res = await AdController.show();
-    return !!(res && res.done);
-  } catch(e){
+    const res = await AdController.show();   // { done, state, description, error }
+    console.log("Interstitial result:", res);
+    lastAdAt = Date.now();
+
+    if (res && res.done) {
+      // за бажанням: бонус навіть за interstitial
+      // addBalance(1);
+      if (autoRevive && typeof game?.restartGame === "function") game.restartGame();
+      return { shown:true, rewarded:true };
+    }
+    // No fill або користувач закрив
+    return { shown:false, reason: res?.description || res?.state || "no_fill" };
+  } catch (e) {
     console.warn("Реклама не показана:", e);
-    return false;
+    return { shown:false, reason:"exception" };
   }
 }
 
-/* ====== 3D СЦЕНА + ЛОГІКА STACK ====== */
+/* ====== 3D СЦЕНА + ЛОГІКА STACK (three r83 + TweenMax) ====== */
 class Stage {
   constructor(){
     this.container = document.getElementById("container");
@@ -342,10 +362,10 @@ class Game {
     // автопоказ реклами один раз за це завершення (revive, якщо додивився)
     if (!this.adShown){
       this.adShown = true;
-      const rewarded = await showAdOnce();
-      if (rewarded){
-        addBalance(3);        // бонус за перегляд
-        this.restartGame();   // "revive"
+      const res = await showInterstitialOnce({ autoRevive: true });
+      if (!res.shown) {
+        console.log("No ads / reason:", res.reason);
+        // фолбек: нічого не робимо — юзер зможе перезапустити кліком/пробілом
       }
     }
   }
