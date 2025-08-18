@@ -1,158 +1,137 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stack Game + AdsGram</title>
-
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; height: 100vh; display: flex; flex-direction: column; }
-    .page { flex: 1; display: none; overflow: auto; padding: 10px; position: relative; }
+    .page { flex: 1; display: none; overflow-y: auto; }
     .page.active { display: block; }
-
     .menu { display: flex; justify-content: space-around; border-top: 1px solid #ccc; background: #fff; padding: 10px 0; }
-    .menu button { flex: 1; background: none; border: none; font-size: 22px; cursor: pointer; }
+    .menu button { flex: 1; background: none; border: none; font-size: 20px; cursor: pointer; }
     .menu button.active { color: green; font-weight: bold; }
 
-    .task { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px; margin: 10px auto; border-radius: 10px; width: 90%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .task button { background: #007bff; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-    .task button.done { background: #28a745; }
-    .balance { font-size: 20px; margin-bottom: 20px; text-align: center; }
+    /* --- Гра --- */
+    #container canvas { position: absolute !important; top: 0; left: 0; width: 100% !important; height: 100% !important; z-index: 1; }
+    #scoreboard { position: absolute; top: 10px; left: 10px; display: flex; gap: 10px; z-index: 2; }
+    #score, #highscore { background: rgba(0,0,0,0.5); color: #fff; padding: 5px 10px; border-radius: 6px; }
+    #instructions { position: absolute; top: 50px; left: 10px; color: #000; font-size: 16px; background: rgba(255,255,255,0.7); padding: 4px 8px; border-radius: 6px; z-index: 2; }
+    .game-over, .ready { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 10px; display: none; z-index: 3; }
+    #start-button { font-size: 20px; padding: 10px 20px; background: green; color: #fff; border-radius: 8px; cursor: pointer; }
 
-    /* Canvas усередині #container */
-    #container canvas {
-      position: absolute !important;
-      top: 0; left: 0;
-      width: 100% !important; height: 100% !important;
-      z-index: 1;
-    }
-
-    /* Рахунок */
-    #scoreboard {
-      position: absolute; top: 10px; left: 10px;
-      display: flex; gap: 10px; z-index: 2;
-    }
-    #score, #highscore {
-      background: rgba(0,0,0,0.5); color: #fff;
-      padding: 5px 10px; border-radius: 6px;
-    }
-
-    /* Інструкція */
-    #instructions {
-      position: absolute; top: 50px; left: 10px; z-index: 2;
-      color: #000; font-size: 16px;
-      background: rgba(255,255,255,0.7);
-      padding: 4px 8px; border-radius: 6px;
-    }
-    .hide { display: none; }
-
-    /* Екрани */
-    .game-over, .ready {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center; background: rgba(255,255,255,0.95);
-      padding: 20px; border-radius: 10px; display: none; z-index: 3;
-    }
-    #start-button {
-      font-size: 20px; padding: 10px 20px;
-      background: green; color: #fff; border-radius: 8px;
-      cursor: pointer;
+    /* --- Контентні сторінки --- */
+    .content-box { padding: 20px; }
+    .balance { font-size: 24px; font-weight: bold; margin-top: 10px; }
+    .task-list, .friends-list, .leaderboard { list-style: none; padding: 0; }
+    .task-list li, .friends-list li, .leaderboard li {
+      background: #fff; padding: 12px; margin: 8px 0; border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
   </style>
 
-  <!-- Three.js r83 (сумісна з логікою гри) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
-  <!-- GSAP 1.x (TweenLite/TweenMax + Power1, сумісно з кодом) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/TweenMax.min.js"></script>
-
+  <!-- Three.js + GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <!-- AdsGram SDK -->
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 </head>
 <body>
 
-  <!-- Сторінки -->
+  <!-- 🎮 Гра -->
   <div id="game" class="page active">
     <div id="container">
       <div id="scoreboard">
         <div id="score">0</div>
         <div id="highscore">🏆 0</div>
       </div>
-      <div id="instructions">Клік по екрану або пробіл — поставити блок. Після програшу — клік, щоб зіграти ще.</div>
-
-      <div class="game-over" id="gameOver">
+      <div id="instructions">Клік або пробіл, щоб поставити блок</div>
+      <div class="game-over">
         <h2>Гра закінчена</h2>
-        <p>Ти молодець 👍</p>
         <p>Клікни або натисни пробіл, щоб почати знову</p>
       </div>
-
-      <div class="ready" id="readyScreen" style="display: block;">
+      <div class="ready">
         <div id="start-button">▶ Старт</div>
       </div>
     </div>
   </div>
 
-  <div id="tasks" class="page">
-    <h2>📋 Завдання</h2>
-    <div class="task">
-      <span>Підпишись на канал +1⭐</span>
-      <button id="subscribeBtn" onclick="subscribe()">Перейти</button>
-    </div>
-    <div class="task" id="task50">
-      <span>🎯 Досягни <b>рекорду 50</b> (+10⭐)</span>
-      <button id="checkTask50">Перевірити</button>
+  <!-- 💰 Баланс -->
+  <div id="balance" class="page">
+    <div class="content-box">
+      <h2>💰 Баланс</h2>
+      <p class="balance">Твої монети: <span id="coins">0</span></p>
     </div>
   </div>
 
-  <div id="tournaments" class="page">
-    <h2>🏆 Турніри</h2>
-    <p>Список топів👇 (рекорд)</p>
+  <!-- 🏆 Лідерборд -->
+  <div id="leaderboard" class="page">
+    <div class="content-box">
+      <h2>🏆 Лідерборд</h2>
+      <ul class="leaderboard" id="leaderboard-list">
+        <li>1. Ти — <span id="lb-score">0</span> очок</li>
+        <li>2. Гравець_123 — 15 очок</li>
+        <li>3. TestUser — 10 очок</li>
+      </ul>
+    </div>
   </div>
 
+  <!-- 👥 Друзі -->
   <div id="friends" class="page">
-    <div class="balance">Баланс ⭐ <span id="balance">0</span></div>
-    <h2>👥 Друзі</h2>
-    <p>Список друзів знизу 👇</p>
+    <div class="content-box">
+      <h2>👥 Друзі</h2>
+      <ul class="friends-list">
+        <li>+ Запроси друга та отримай 50 монет</li>
+        <li>Друзі з Telegram підтягуються сюди (можна інтегрувати)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 📋 Завдання -->
+  <div id="tasks" class="page">
+    <div class="content-box">
+      <h2>📋 Завдання</h2>
+      <ul class="task-list">
+        <li>🎯 Переглянь рекламу ( +10 монет )</li>
+        <li>🎮 Набери 20 очок у грі ( +20 монет )</li>
+        <li>🔥 Запроси друга ( +30 монет )</li>
+      </ul>
+    </div>
   </div>
 
   <!-- Меню -->
   <div class="menu">
     <button onclick="showPage('game', this)" class="active">🎮</button>
-    <button onclick="showPage('tasks', this)">✏️</button>
-    <button onclick="showPage('tournaments', this)">🏆</button>
+    <button onclick="showPage('balance', this)">💰</button>
+    <button onclick="showPage('leaderboard', this)">🏆</button>
     <button onclick="showPage('friends', this)">👥</button>
+    <button onclick="showPage('tasks', this)">📋</button>
   </div>
 
   <script>
     // === AdsGram init ===
-    window.AdController = window.Adsgram.init({ blockId: "int-13878" });
+    const AdController = window.Adsgram.init({ blockId: "int-13878" });
 
-    let balance = 0, subscribed = false, task50Completed = false, highscore = 0;
+    let coins = localStorage.getItem("coins") ? parseInt(localStorage.getItem("coins")) : 0;
+    document.getElementById("coins").innerText = coins;
 
-    window.onload = function () {
-      if (localStorage.getItem("balance")) {
-        balance = parseInt(localStorage.getItem("balance")); document.getElementById("balance").innerText = balance;
-      }
-      if (localStorage.getItem("subscribed") === "true") {
-        subscribed = true;
-        let btn = document.getElementById("subscribeBtn");
-        if (btn) { btn.innerText = "Виконано"; btn.classList.add("done"); }
-      }
-      if (localStorage.getItem("task50Completed") === "true") {
-        task50Completed = true;
-        let btn = document.getElementById("checkTask50");
-        if (btn) { btn.innerText = "Виконано"; btn.classList.add("done"); }
-      }
-      if (localStorage.getItem("highscore")) {
-        highscore = parseInt(localStorage.getItem("highscore"));
+    let highscore = localStorage.getItem("highscore") ? parseInt(localStorage.getItem("highscore")) : 0;
+    document.getElementById("highscore").innerText = "🏆 " + highscore;
+    document.getElementById("lb-score").innerText = highscore;
+
+    function updateHighscore(currentScore) {
+      if (currentScore > highscore) {
+        highscore = currentScore;
+        localStorage.setItem("highscore", highscore);
         document.getElementById("highscore").innerText = "🏆 " + highscore;
+        document.getElementById("lb-score").innerText = highscore;
       }
-    };
+    }
 
-    function saveData() {
-      localStorage.setItem("balance", balance);
-      localStorage.setItem("subscribed", subscribed);
-      localStorage.setItem("task50Completed", task50Completed);
-      localStorage.setItem("highscore", highscore);
+    function addCoins(amount) {
+      coins += amount;
+      localStorage.setItem("coins", coins);
+      document.getElementById("coins").innerText = coins;
     }
 
     function showPage(id, btn) {
@@ -160,56 +139,11 @@
       document.getElementById(id).classList.add('active');
       document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      // Пауза гри при переході між вкладками
-      if (window.game) {
-        window.game.isPaused = (id !== 'game');
-      }
     }
 
-    function subscribe() {
-      if (!subscribed) {
-        window.open("https://t.me/stackofficialgame", "_blank");
-        let btn = document.getElementById("subscribeBtn");
-        btn.innerText = "Виконано"; btn.classList.add("done");
-        subscribed = true;
-        addBalance(1); saveData();
-      }
-    }
-
-    function addBalance(amount) {
-      balance += amount;
-      document.getElementById("balance").innerText = balance;
-      saveData();
-    }
-
-    document.getElementById("checkTask50").addEventListener("click", () => {
-      let btn = document.getElementById("checkTask50");
-      if (highscore >= 50 && !task50Completed) {
-        addBalance(10); btn.innerText = "Виконано"; btn.classList.add("done");
-        task50Completed = true; saveData();
-      } else if (highscore < 50) {
-        alert("❌ Твій рекорд замалий (потрібно 50+)");
-      }
-    });
-
-    // Глобальна функція — викликається із гри
-    function updateHighscore(currentScore) {
-      if (currentScore > highscore) {
-        highscore = currentScore;
-        localStorage.setItem("highscore", highscore);
-        document.getElementById("highscore").innerText = "🏆 " + highscore;
-      }
-    }
-
-    // Показ AdsGram після поразки (викликатимемо з endGame у script.js)
-    window.showInterstitialAd = function() {
-      if (!window.AdController) return;
-      window.AdController.show().catch(() => {}).finally(() => {});
-    };
+    // === Далі підключається логіка гри (той самий код з three.js як ми робили вище) ===
+    // init(), addLayer(), addOverhang(), eventHandler(), endGame() і т.д.
+    // ...
   </script>
-
-  <!-- Логіка гри -->
-  <script src="./script.js"></script>
 </body>
 </html>
