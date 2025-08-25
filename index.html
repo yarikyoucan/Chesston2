@@ -43,7 +43,16 @@
     mark{background:rgba(77,163,255,.25); color:inherit; padding:0 .1em; border-radius:4px}
     .view{display:none}
     .view.active{display:block}
-    .work-card{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow)}
+   .work-card{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:var(--shadow);
+  max-width:1100px;   /* ← ось цим керуєш шириною */
+  margin:0 auto;      /* ← центрує по середині */
+}
+
     .work-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
     .work-title{font-size:28px; font-weight:800}
     .work-meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted)}
