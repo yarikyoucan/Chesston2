@@ -21,7 +21,7 @@
       background-attachment: fixed;
     }
     a{color:inherit}
-    .container{max-width:1000px;margin:0 auto;padding:24px}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
     header{display:flex; flex-direction:column; gap:10px; align-items:center; text-align:center; margin:28px 0 10px}
     .logo{font-weight:800; letter-spacing:.2px; font-size:28px}
     .logo b{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -43,17 +43,15 @@
     mark{background:rgba(77,163,255,.25); color:inherit; padding:0 .1em; border-radius:4px}
     .view{display:none}
     .view.active{display:block}
-   .work-card{
+  .work-card{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.08);
   border-radius:var(--radius);
   padding:28px;
   box-shadow:var(--shadow);
-  max-width:1100px;   /* ← робиш ширший прямокутник */
-  margin:0 auto;      /* ← центрує по середині */
+  max-width:1100px;  /* ← робить сам прямокутник ширшим */
+  margin:0 auto;     /* ← центрує його */
 }
-
-
     .work-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
     .work-title{font-size:28px; font-weight:800}
     .work-meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted)}
