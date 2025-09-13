@@ -1,96 +1,492 @@
-import React, { useState } from "react";
-
-export default function App() {
-  const [page, setPage] = useState<"game" | "ads" | "leaderboard" | "friends">("game");
-  const [balance, setBalance] = useState(0);
-
-  function renderPage() {
-    switch (page) {
-      case "ads":
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <h1 className="text-3xl font-bold mb-4">Реклама</h1>
-            <button
-              onClick={() => {
-                setTimeout(() => setBalance(balance + 0.001), 2000);
-              }}
-              className="px-6 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition"
-            >
-              Подивитись рекламу (+0.001 TON)
-            </button>
-          </div>
-        );
-      case "leaderboard":
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <h1 className="text-3xl font-bold mb-4">Лідерборд</h1>
-            <p>Скоро з’явиться топ-30 гравців 🏆</p>
-          </div>
-        );
-      case "friends":
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <h1 className="text-3xl font-bold mb-4">Друзі</h1>
-            <p>Отримуй бонус за друзів (скоро буде)</p>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <h1 className="text-3xl font-bold mb-2">Гра</h1>
-            <p>Тут буде ваша майбутня гра 🎮</p>
-          </div>
-        );
-    }
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>StackTON — Demo Play & Earn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#0b1220; --bg2:#0f2340; --card: rgba(255,255,255,0.04);
+    --accent:#06b6d4; --glass: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter,system-ui,Arial,sans-serif;
+    background: radial-gradient(ellipse at top right, rgba(255,255,255,0.02), transparent),
+                linear-gradient(180deg,var(--bg2),var(--bg1));
+    color:#eef2ff; -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
   }
 
-  return (
-    <div
-      className={`min-h-screen flex flex-col text-white transition duration-700 ${
-        page === "game"
-          ? "bg-gradient-to-br from-purple-600 to-indigo-800"
-          : page === "ads"
-          ? "bg-gradient-to-br from-yellow-400 to-orange-600"
-          : page === "leaderboard"
-          ? "bg-gradient-to-br from-green-500 to-emerald-700"
-          : "bg-gradient-to-br from-pink-500 to-red-600"
-      }`}
-    >
-      <header className="flex justify-between items-center p-4 bg-black/20">
-        <h1 className="text-xl font-bold">GameToEarnTON</h1>
-        <div className="bg-black/40 px-4 py-2 rounded-full">
-          {balance.toFixed(3)} TON
+  .app{
+    max-width:420px; margin:20px auto; height:880px; border-radius:18px; overflow:hidden;
+    box-shadow: 0 8px 40px rgba(2,6,23,0.6);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    display:flex; flex-direction:column; border:1px solid rgba(255,255,255,0.03);
+  }
+
+  /* header */
+  .top{
+    display:flex; align-items:center; justify-content:space-between; padding:14px;
+    backdrop-filter: blur(6px); background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  }
+  .brand{display:flex; gap:10px; align-items:center}
+  .logo{
+    width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#0ea5a4,#06b6d4);
+    display:flex; align-items:center; justify-content:center; font-weight:800; color:#062b2e;
+    box-shadow: 0 6px 18px rgba(6,182,212,0.12);
+  }
+  .title{font-weight:700}
+  .balance{
+    background:var(--card); padding:8px 12px; border-radius:999px; font-weight:600; font-size:14px;
+  }
+
+  /* game area */
+  .viewport{
+    position:relative; flex:1; display:flex; align-items:center; justify-content:center;
+    padding:12px;
+    background-image: radial-gradient(#ffffff10 1px, transparent 2px);
+    background-size: 14px 14px;
+  }
+  /* moon */
+  .moon{
+    position:absolute; right:26px; top:40px; width:92px; height:92px; border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, #fff2b3, #ffd87a 20%, #f1c85e 45%, #d6b24a 100%);
+    box-shadow: 0 18px 40px rgba(20,10,0,0.25) inset;
+    opacity:0.95;
+  }
+
+  /* play card (center) */
+  .card{
+    width:100%; max-width:360px; border-radius:14px; padding:18px; background:linear-gradient(180deg, rgba(0,0,0,0.4), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,255,255,0.03); box-shadow: 0 10px 30px rgba(3,6,23,0.6);
+  }
+
+  .instructions{background:rgba(0,0,0,0.35); padding:10px; border-radius:10px; margin-bottom:12px; font-size:14px}
+
+  .start-btn{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    background:linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);
+    font-weight:700; cursor:pointer; transition:transform .15s ease, background .15s;
+  }
+  .start-btn:hover{ transform:translateY(-3px) }
+  .small{font-size:13px; opacity:0.9; margin-top:10px}
+
+  /* canvas area */
+  #gameCanvas{
+    display:block; margin:18px auto 6px; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
+    border-radius:8px; border: 1px solid rgba(255,255,255,0.02);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6) inset;
+  }
+
+  /* bottom nav */
+  .bottom{
+    display:flex; gap:10px; padding:10px; align-items:center; justify-content:space-between;
+    background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.25));
+  }
+  .nav-left{display:flex; gap:8px}
+  .nav-btn{
+    padding:8px 12px; border-radius:12px; background:var(--glass); border:1px solid rgba(255,255,255,0.02);
+    cursor:pointer; font-weight:600;
+  }
+
+  /* leaderboard modal */
+  .modal{
+    position: absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:320px; max-width:90%;
+    background: linear-gradient(180deg, rgba(4,6,12,0.8), rgba(8,10,20,0.85)); padding:14px; border-radius:12px;
+    border:1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 60px rgba(2,6,23,0.7);
+  }
+  .hide{display:none}
+
+  /* small text */
+  .muted{opacity:0.85; font-size:13px}
+  .center { text-align:center }
+  footer.note{font-size:12px; opacity:0.7; text-align:center; padding:8px}
+
+  /* responsive */
+  @media (max-width:420px){
+    .app{height:calc(100vh - 24px); margin:12px}
+  }
+</style>
+</head>
+<body>
+  <div class="app" role="application">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">T</div>
+        <div>
+          <div class="title">Stackton</div>
+          <div class="muted" style="font-size:12px">Клік або пробіл — поставити блок</div>
         </div>
-      </header>
-
-      <main className="flex-1 flex items-center justify-center">{renderPage()}</main>
-
-      <nav className="grid grid-cols-4 bg-black/30">
-        <button
-          onClick={() => setPage("game")}
-          className="py-3 hover:bg-white/20 transition"
-        >
-          Гра
-        </button>
-        <button
-          onClick={() => setPage("ads")}
-          className="py-3 hover:bg-white/20 transition"
-        >
-          Реклама
-        </button>
-        <button
-          onClick={() => setPage("leaderboard")}
-          className="py-3 hover:bg-white/20 transition"
-        >
-          Лідерборд
-        </button>
-        <button
-          onClick={() => setPage("friends")}
-          className="py-3 hover:bg-white/20 transition"
-        >
-          Друзі
-        </button>
-      </nav>
+      </div>
+      <div id="balance" class="balance">0.000 TON</div>
     </div>
-  );
+
+    <div class="viewport">
+      <div class="moon" aria-hidden="true"></div>
+
+      <div class="card" id="mainCard" role="main">
+        <div class="instructions">Клік або пробіл — поставити блок. Після завершення — клікни «Старт», щоб зіграти ще.</div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div style="flex:1">
+            <div id="scoreLine" class="muted">Рекорд: <span id="best">0</span> • Поточний: <span id="current">0</span></div>
+          </div>
+          <div style="width:120px">
+            <button id="startBtn" class="start-btn">▶ Старт</button>
+          </div>
+        </div>
+
+        <!-- canvas game -->
+        <canvas id="gameCanvas" width="320" height="360" aria-label="Stack game canvas"></canvas>
+
+        <div class="small center muted">Нижнє меню — ігрові дії та реклама</div>
+      </div>
+
+      <!-- leaderboard modal hidden -->
+      <div id="leaderModal" class="modal hide" role="dialog" aria-modal="true">
+        <h3 style="margin:0 0 8px 0">Лідерборд — Топ</h3>
+        <ol id="leaderList" style="padding-left:18px; margin:0 0 10px 0"></ol>
+        <div style="display:flex; gap:8px; justify-content:flex-end">
+          <button id="closeLb" class="nav-btn">Закрити</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="nav-left">
+        <button id="adsBtn" class="nav-btn">Подивитись рекламу (+0.001)</button>
+        <button id="saveScoreBtn" class="nav-btn">Зберегти рекорд</button>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button id="leaderBtn" class="nav-btn">Лідерборд</button>
+        <button id="payoutBtn" class="nav-btn">Request Payout</button>
+      </div>
+    </div>
+
+    <footer class="note">Demo — для реальних виплат потрібна інтеграція TonConnect/TonWeb та підтвердження KYC</footer>
+  </div>
+
+<script>
+/*
+  Stack-like mini game + local balance + leaderboard mock
+  Controls: click canvas or press Space to drop block
+  Start: press Start button
+*/
+
+// --- Utilities & storage keys
+const KEY_BEST = 'stackton_best';
+const KEY_LEADER = 'stackton_leaderboard';
+const KEY_BAL = 'stackton_balance';
+const KEY_PAYOUTS = 'stackton_payouts';
+
+function loadJSON(key, fallback){ try { const v = localStorage.getItem(key); return v? JSON.parse(v): fallback; } catch(e){return fallback} }
+function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+
+// --- UI elements
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const startBtn = document.getElementById('startBtn');
+const balanceEl = document.getElementById('balance');
+const bestEl = document.getElementById('best');
+const currentEl = document.getElementById('current');
+const adsBtn = document.getElementById('adsBtn');
+const leaderBtn = document.getElementById('leaderBtn');
+const leaderModal = document.getElementById('leaderModal');
+const leaderList = document.getElementById('leaderList');
+const closeLb = document.getElementById('closeLb');
+const saveScoreBtn = document.getElementById('saveScoreBtn');
+const payoutBtn = document.getElementById('payoutBtn');
+
+// --- Game variables
+let running = false;
+let stack = []; // array of {x, width, y, color}
+let moving = null; // currently moving block
+let dir = 1;
+let speed = 2.4;
+let level = 0;
+let canvasW = canvas.width;
+let canvasH = canvas.height;
+let baseY = canvasH - 40;
+let best = Number(localStorage.getItem(KEY_BEST) || 0);
+let balance = Number(localStorage.getItem(KEY_BAL) || 0);
+let currentScore = 0;
+
+// colors palette
+const colors = ['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#10b981','#06b6d4','#60a5fa','#7c3aed'];
+
+// init UI
+bestEl.textContent = String(best);
+currentEl.textContent = String(currentScore);
+updateBalanceUI();
+
+function updateBalanceUI(){
+  // show 3 decimals
+  balanceEl.textContent = balance.toFixed(3) + ' TON';
+  localStorage.setItem(KEY_BAL, String(balance));
 }
+
+// create base block
+function resetGame(){
+  stack = [];
+  level = 0;
+  currentScore = 0;
+  // base block centered
+  const baseWidth = 160;
+  stack.push({ x: (canvasW - baseWidth)/2, width: baseWidth, y: baseY, color: '#2d3748' });
+  moving = null;
+  running = false;
+  speed = 2.4;
+  render();
+}
+
+// start game
+function startGame(){
+  resetGame();
+  running = true;
+  spawnMoving();
+  loop();
+}
+
+// create moving block at top of stack
+function spawnMoving(){
+  const prev = stack[stack.length-1];
+  const width = prev.width;
+  const y = prev.y - 40;
+  const x = 0; // start left
+  moving = { x, width, y, color: colors[level % colors.length] };
+  dir = 1;
+}
+
+// place moving block (on click/space)
+function placeBlock(){
+  if(!running || !moving) return;
+  // determine overlap with prev
+  const prev = stack[stack.length-1];
+  const overlapLeft = Math.max(prev.x, moving.x);
+  const overlapRight = Math.min(prev.x + prev.width, moving.x + moving.width);
+  const overlap = overlapRight - overlapLeft;
+
+  if(overlap <= 2){
+    // miss -> game over (allow tiny tolerance)
+    running = false;
+    onGameOver();
+    return;
+  }
+
+  // cut block to overlap
+  const newWidth = overlap;
+  const newX = overlapLeft;
+  // create placed block
+  stack.push({ x: newX, width: newWidth, y: moving.y, color: moving.color });
+  level++;
+  currentScore = level;
+  currentEl.textContent = String(currentScore);
+
+  // increase speed slowly
+  speed += 0.12;
+
+  // spawn next moving
+  spawnMoving();
+}
+
+// game over handler
+function onGameOver(){
+  // update best if needed
+  if(currentScore > best){
+    best = currentScore;
+    localStorage.setItem(KEY_BEST, String(best));
+    bestEl.textContent = String(best);
+  }
+  // show short flash
+  flashMessage(`Гра закінчена — рахунок ${currentScore}`, 1700);
+}
+
+// simple floating message
+function flashMessage(text, ms=1200){
+  const el = document.createElement('div');
+  el.textContent = text;
+  el.style.position = 'absolute'; el.style.left='50%'; el.style.top='12%';
+  el.style.transform='translateX(-50%)'; el.style.padding='10px 14px';
+  el.style.background='rgba(0,0,0,0.5)'; el.style.borderRadius='10px';
+  el.style.border='1px solid rgba(255,255,255,0.04)'; el.style.zIndex='60';
+  document.querySelector('.app').appendChild(el);
+  setTimeout(()=> el.remove(), ms);
+}
+
+// main loop
+let raf = null;
+function loop(){
+  if(!running){ render(); return; }
+  // move current
+  moving.x += speed * dir;
+  if(moving.x + moving.width > canvasW){ moving.x = canvasW - moving.width; dir = -1; }
+  if(moving.x < 0){ moving.x = 0; dir = 1; }
+  render();
+  raf = requestAnimationFrame(loop);
+}
+
+// render all
+function render(){
+  // clear
+  ctx.clearRect(0,0,canvasW,canvasH);
+  // background stars (subtle)
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  for(let i=0;i<80;i++){
+    // random static stars seeded by index for consistency
+    const x = (i*37 % canvasW);
+    const y = (i*21 % canvasH);
+    ctx.fillRect(x, y, 1,1);
+  }
+
+  // draw stack from bottom up
+  for(let i=0;i<stack.length;i++){
+    const b = stack[i];
+    drawBlock(b.x, b.y, b.width, 32, b.color);
+  }
+
+  // moving block
+  if(moving) drawBlock(moving.x, moving.y, moving.width, 32, moving.color);
+
+  // shadow / platform visual
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(canvasW/2, baseY+28, 80, 20, 0, 0, Math.PI*2);
+  ctx.fill();
+}
+
+// draw rounded block with simple 3D shading
+function drawBlock(x, y, w, h, color){
+  // main
+  ctx.fillStyle = color;
+  roundRect(ctx, x, y, w, h, 6, true, false);
+  // top highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  roundRect(ctx, x+4, y+4, w-8, 8, 4, true, false);
+  // side shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillRect(x+w-8, y+6, 6, h-12);
+}
+
+// helper: rounded rect
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  if (r===undefined) r = 5;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  if(fill) ctx.fill();
+  if(stroke) ctx.stroke();
+}
+
+// handle input
+canvas.addEventListener('click', () => {
+  if(!running) return;
+  placeBlock();
+});
+window.addEventListener('keydown', (e) => {
+  if(e.code === 'Space'){
+    e.preventDefault();
+    if(!running){ startGame(); return; }
+    placeBlock();
+  }
+});
+
+// start button
+startBtn.addEventListener('click', () => {
+  if(!running) startGame();
+  else { running = false; cancelAnimationFrame(raf); onGameOver(); }
+});
+
+// ads button (reward simulation)
+adsBtn.addEventListener('click', () => {
+  adsBtn.disabled = true;
+  adsBtn.textContent = 'Дивимось...';
+  setTimeout(() => {
+    const add = 0.001;
+    // add carefully to 6 decimals
+    balance = Math.round((balance + add) * 1000000) / 1000000;
+    updateBalanceUI();
+    flashMessage('+0.001 TON отримано 🎉', 1400);
+    adsBtn.disabled = false;
+    adsBtn.textContent = 'Подивитись рекламу (+0.001)';
+  }, 2000);
+});
+
+// leaderboard
+leaderBtn.addEventListener('click', () => {
+  const lb = loadJSON(KEY_LEADER, []);
+  renderLeader(lb);
+  leaderModal.classList.remove('hide');
+});
+closeLb.addEventListener('click', () => leaderModal.classList.add('hide'));
+
+function renderLeader(list){
+  leaderList.innerHTML = '';
+  if(!list.length){
+    leaderList.innerHTML = '<li class="muted">Поки що немає записів</li>';
+    return;
+  }
+  list.slice(0,20).forEach(item=>{
+    const li = document.createElement('li');
+    li.textContent = `${item.name} — ${item.score} pts`;
+    leaderList.appendChild(li);
+  });
+}
+
+// save score to leaderboard
+saveScoreBtn.addEventListener('click', () => {
+  const name = prompt('Введи нік для лідерборду', 'Player');
+  if(!name) return;
+  const lb = loadJSON(KEY_LEADER, []);
+  lb.push({ name: name, score: currentScore, date: (new Date()).toISOString() });
+  // sort desc
+  lb.sort((a,b)=>b.score - a.score);
+  saveJSON(KEY_LEADER, lb);
+  flashMessage('Рекорд збережено в лідерборд', 1200);
+});
+
+// payout request (mock)
+payoutBtn.addEventListener('click', () => {
+  const adr = prompt('Введи TON-адресу для виводу (це демо, реальну транзакцію потрібно робити вручну):', 'EQ...your_address...');
+  if(!adr) return;
+  const min = 0.05;
+  if(balance < min){
+    alert(`Мінімум для запиту виводу — ${min} TON. У тебе лише ${balance.toFixed(3)} TON`);
+    return;
+  }
+  const payouts = loadJSON(KEY_PAYOUTS, []);
+  const id = 'payout_' + Date.now();
+  payouts.push({ id, address: adr, amount: balance, status:'pending', createdAt: new Date().toISOString() });
+  saveJSON(KEY_PAYOUTS, payouts);
+  flashMessage('Заявка на вивід створена (локально)', 1500);
+  // zero balance locally (simulate hold)
+  balance = 0;
+  updateBalanceUI();
+  // save updated payouts
+  saveJSON(KEY_PAYOUTS, payouts);
+  console.log('Payouts:', payouts);
+});
+
+// init
+resetGame();
+render(); // draw base
+// ensure canvas resizes nicely with device pixel ratio
+function adjustCanvas(){
+  const ratio = window.devicePixelRatio || 1;
+  canvasW = canvas.width;
+  canvasH = canvas.height;
+  // keep static size as provided; you can change to responsive if want
+}
+window.addEventListener('resize', adjustCanvas);
+adjustCanvas();
+
+</script>
+</body>
+</html>
