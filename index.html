@@ -3,490 +3,448 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>StackTON — Demo Play & Earn</title>
+<title>City Miner — CityCoin (CTC) Economy Demo</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg1:#0b1220; --bg2:#0f2340; --card: rgba(255,255,255,0.04);
-    --accent:#06b6d4; --glass: rgba(255,255,255,0.03);
+    --bg1:#070a12; --neon1:#06b6d4; --neon2:#7c3aed; --card: rgba(255,255,255,0.04);
   }
   *{box-sizing:border-box}
-  body{
-    margin:0; font-family:Inter,system-ui,Arial,sans-serif;
-    background: radial-gradient(ellipse at top right, rgba(255,255,255,0.02), transparent),
-                linear-gradient(180deg,var(--bg2),var(--bg1));
-    color:#eef2ff; -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-  }
-
-  .app{
-    max-width:420px; margin:20px auto; height:880px; border-radius:18px; overflow:hidden;
-    box-shadow: 0 8px 40px rgba(2,6,23,0.6);
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    display:flex; flex-direction:column; border:1px solid rgba(255,255,255,0.03);
-  }
-
-  /* header */
-  .top{
-    display:flex; align-items:center; justify-content:space-between; padding:14px;
-    backdrop-filter: blur(6px); background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-  }
-  .brand{display:flex; gap:10px; align-items:center}
-  .logo{
-    width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#0ea5a4,#06b6d4);
-    display:flex; align-items:center; justify-content:center; font-weight:800; color:#062b2e;
-    box-shadow: 0 6px 18px rgba(6,182,212,0.12);
-  }
-  .title{font-weight:700}
-  .balance{
-    background:var(--card); padding:8px 12px; border-radius:999px; font-weight:600; font-size:14px;
-  }
-
-  /* game area */
-  .viewport{
-    position:relative; flex:1; display:flex; align-items:center; justify-content:center;
-    padding:12px;
-    background-image: radial-gradient(#ffffff10 1px, transparent 2px);
-    background-size: 14px 14px;
-  }
-  /* moon */
-  .moon{
-    position:absolute; right:26px; top:40px; width:92px; height:92px; border-radius:50%;
-    background: radial-gradient(circle at 30% 30%, #fff2b3, #ffd87a 20%, #f1c85e 45%, #d6b24a 100%);
-    box-shadow: 0 18px 40px rgba(20,10,0,0.25) inset;
-    opacity:0.95;
-  }
-
-  /* play card (center) */
-  .card{
-    width:100%; max-width:360px; border-radius:14px; padding:18px; background:linear-gradient(180deg, rgba(0,0,0,0.4), rgba(255,255,255,0.02));
-    border:1px solid rgba(255,255,255,0.03); box-shadow: 0 10px 30px rgba(3,6,23,0.6);
-  }
-
-  .instructions{background:rgba(0,0,0,0.35); padding:10px; border-radius:10px; margin-bottom:12px; font-size:14px}
-
-  .start-btn{
-    width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
-    background:linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-    padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);
-    font-weight:700; cursor:pointer; transition:transform .15s ease, background .15s;
-  }
-  .start-btn:hover{ transform:translateY(-3px) }
-  .small{font-size:13px; opacity:0.9; margin-top:10px}
-
-  /* canvas area */
-  #gameCanvas{
-    display:block; margin:18px auto 6px; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
-    border-radius:8px; border: 1px solid rgba(255,255,255,0.02);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.6) inset;
-  }
-
-  /* bottom nav */
-  .bottom{
-    display:flex; gap:10px; padding:10px; align-items:center; justify-content:space-between;
-    background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.25));
-  }
-  .nav-left{display:flex; gap:8px}
-  .nav-btn{
-    padding:8px 12px; border-radius:12px; background:var(--glass); border:1px solid rgba(255,255,255,0.02);
-    cursor:pointer; font-weight:600;
-  }
-
-  /* leaderboard modal */
-  .modal{
-    position: absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:320px; max-width:90%;
-    background: linear-gradient(180deg, rgba(4,6,12,0.8), rgba(8,10,20,0.85)); padding:14px; border-radius:12px;
-    border:1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 60px rgba(2,6,23,0.7);
-  }
-  .hide{display:none}
-
-  /* small text */
-  .muted{opacity:0.85; font-size:13px}
-  .center { text-align:center }
-  footer.note{font-size:12px; opacity:0.7; text-align:center; padding:8px}
-
+  body{margin:0; font-family:Inter,system-ui,Arial; background: linear-gradient(180deg,#061226 0%, #08142a 60%); color:#e6eef8}
+  .wrap{max-width:940px; margin:18px auto; padding:18px; border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow: 0 20px 60px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.02)}
+  header{display:flex; justify-content:space-between; align-items:center; gap:12px}
+  .brand{display:flex; gap:12px; align-items:center}
+  .logo{width:56px; height:56px; border-radius:12px; background:linear-gradient(135deg,var(--neon1),var(--neon2)); display:flex; align-items:center; justify-content:center; font-weight:800; color:#02121a; box-shadow:0 8px 30px rgba(7,22,34,0.6)}
+  h1{margin:0; font-size:20px}
+  .sub{font-size:12px; opacity:0.85}
+  .balances{display:flex; gap:10px; align-items:center}
+  .bal{background:var(--card); padding:8px 12px; border-radius:999px; font-weight:700; font-size:14px}
+  nav{display:flex; gap:8px; margin-top:14px}
+  .tab{padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.02); cursor:pointer; font-weight:600}
+  .tab.active{box-shadow:0 10px 30px rgba(7,22,34,0.6); border:1px solid rgba(255,255,255,0.03); background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))}
+  main{display:grid; grid-template-columns: 1fr 320px; gap:16px; margin-top:18px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.02);}
+  .section-title{font-weight:700; margin-bottom:8px}
+  .city-illustration{height:220px; border-radius:10px; background:
+    radial-gradient(circle at 85% 15%, rgba(255,255,255,0.04), transparent 6%),
+    linear-gradient(180deg,#020618 0%, #08203a 60%);
+    display:flex; align-items:flex-end; justify-content:center; padding:18px; position:relative; overflow:hidden}
+  .city-illustration::after{content:''; position:absolute; left:0; right:0; bottom:0; height:60px; background:linear-gradient(180deg, transparent, rgba(0,0,0,0.6));}
+  .city-sky{position:absolute; left:20px; top:20px; width:86px; height:86px; border-radius:50%; background: radial-gradient(circle at 30% 30%, #fff2b3, #ffd87a, #d6b24a); opacity:0.9}
+  .building{width:60px; height:80px; margin:0 6px; background:linear-gradient(180deg,#0f1720,#06101b); border-radius:6px; box-shadow: inset 0 10px 18px rgba(255,255,255,0.02)}
+  .neon{box-shadow:0 8px 24px rgba(7,22,34,0.6), 0 0 18px rgba(7,182,212,0.12)}
+  .controls{display:flex; gap:8px; margin-top:12px}
+  button.btn{padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; border: none}
+  .btn.primary{background:linear-gradient(90deg,var(--neon1),var(--neon2)); color:#07121a}
+  .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); color:#e6eef8}
+  .small{font-size:13px; opacity:0.9}
+  .miner-list{display:flex; flex-direction:column; gap:10px}
+  .miner{display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02)}
+  .muted{opacity:0.8; font-size:13px}
+  .stat-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+  input[type="number"]{padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); color:#e6eef8}
+  .market-row{display:flex; gap:8px; align-items:center; margin-top:8px}
+  .notice{font-size:13px; opacity:0.85; margin-top:10px}
+  footer{margin-top:12px; font-size:12px; opacity:0.7}
+  ol{padding-left:18px; margin:0}
   /* responsive */
-  @media (max-width:420px){
-    .app{height:calc(100vh - 24px); margin:12px}
-  }
+  @media (max-width:900px){ main{grid-template-columns:1fr; } .city-illustration{height:160px} }
 </style>
 </head>
 <body>
-  <div class="app" role="application">
-    <div class="top">
+  <div class="wrap" role="application" aria-labelledby="title">
+    <header>
       <div class="brand">
-        <div class="logo">T</div>
+        <div class="logo">C</div>
         <div>
-          <div class="title">Stackton</div>
-          <div class="muted" style="font-size:12px">Клік або пробіл — поставити блок</div>
+          <h1 id="title">City Miner — CityCoin (CTC)</h1>
+          <div class="sub">Майнінг, ринок і економіка — демо локально</div>
         </div>
       </div>
-      <div id="balance" class="balance">0.000 TON</div>
-    </div>
 
-    <div class="viewport">
-      <div class="moon" aria-hidden="true"></div>
+      <div class="balances">
+        <div class="bal" id="tonBalance">TON: 0.000</div>
+        <div class="bal" id="ctcBalance">CTC: 0</div>
+      </div>
+    </header>
 
-      <div class="card" id="mainCard" role="main">
-        <div class="instructions">Клік або пробіл — поставити блок. Після завершення — клікни «Старт», щоб зіграти ще.</div>
+    <nav>
+      <div class="tab active" data-tab="city">🏙 Місто (Майнери)</div>
+      <div class="tab" data-tab="bank">💰 Банк (Обмін)</div>
+      <div class="tab" data-tab="market">📈 Ринок (Апгрейди)</div>
+      <div class="tab" data-tab="friends">👥 Друзі</div>
+      <div class="tab" data-tab="ledger">📒 Журнал</div>
+    </nav>
 
-        <div style="display:flex; gap:10px; align-items:center;">
-          <div style="flex:1">
-            <div id="scoreLine" class="muted">Рекорд: <span id="best">0</span> • Поточний: <span id="current">0</span></div>
+    <main>
+      <section class="card">
+        <div class="city-illustration">
+          <div class="city-sky" aria-hidden="true"></div>
+          <div style="display:flex; gap:6px; position:relative; z-index:2;">
+            <div class="building"></div>
+            <div class="building" style="height:110px"></div>
+            <div class="building neon" style="height:140px"></div>
+            <div class="building" style="height:90px"></div>
+            <div class="building neon" style="height:130px"></div>
           </div>
-          <div style="width:120px">
-            <button id="startBtn" class="start-btn">▶ Старт</button>
+        </div>
+
+        <div id="tabCity" class="tabContent">
+          <h3 class="section-title">Місто — твої майнери</h3>
+          <div class="small muted">Автонaрахування CTC від куплених майнерів. Показані проєкції / доба.</div>
+
+          <div style="margin-top:12px" class="stat-row">
+            <div class="muted">Курс: <strong id="rateTxt">1 TON = 1,000,000 CTC</strong></div>
+            <div class="muted">Комісія обміну: <strong id="feePct">1%</strong></div>
+            <div class="muted">CTC → TON приклад: <strong>100 CTC = 0.000100 TON</strong></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="miner-list" id="minerList"></div>
+          </div>
+
+          <div class="controls" style="margin-top:10px">
+            <button class="btn primary" id="addClick">Клікнути — отримати 1 CTC</button>
+            <button class="btn ghost" id="collectAll">Зібрати CTC з майнерів</button>
+            <div style="margin-left:auto" class="muted small">Проєкція: <span id="projCtcDay">0</span> CTC / день (~<span id="projTonDay">0.000</span> TON/д)</div>
+          </div>
+
+          <div class="notice">Пояснення економіки: ми встановили фіксований курс 1 TON = 1,000,000 CTC (тобто 1 CTC = 0.000001 TON). Якщо майниться 100 CTC/д — це 0.0001 TON/д. Апгрейди підвищують продуктивність майнерів.</div>
+        </div>
+
+        <div id="tabBank" class="tabContent" style="display:none">
+          <h3 class="section-title">Банк — обмін</h3>
+          <div class="small muted">Обміняй CTC → TON або купи CTC за TON. Комісія: <span id="feeInline">1%</span>.</div>
+
+          <div style="margin-top:12px">
+            <div class="market-row">
+              <input id="sellCtcAmount" type="number" placeholder="CTC to sell" min="1" />
+              <button class="btn primary" id="sellCtcBtn">Продати CTC → TON</button>
+            </div>
+
+            <div class="market-row">
+              <input id="buyCtcAmount" type="number" placeholder="TON to spend" min="0.0001" step="0.0001" />
+              <button class="btn primary" id="buyCtcBtn">Купити CTC за TON</button>
+            </div>
+
+            <div class="muted small" style="margin-top:8px" id="calcPreview"></div>
           </div>
         </div>
 
-        <!-- canvas game -->
-        <canvas id="gameCanvas" width="320" height="360" aria-label="Stack game canvas"></canvas>
+        <div id="tabMarket" class="tabContent" style="display:none">
+          <h3 class="section-title">Ринок — апгрейди</h3>
+          <div class="small muted">Купуй типи майнерів для збільшення CTC/добу. Вартість в TON.</div>
 
-        <div class="small center muted">Нижнє меню — ігрові дії та реклама</div>
-      </div>
-
-      <!-- leaderboard modal hidden -->
-      <div id="leaderModal" class="modal hide" role="dialog" aria-modal="true">
-        <h3 style="margin:0 0 8px 0">Лідерборд — Топ</h3>
-        <ol id="leaderList" style="padding-left:18px; margin:0 0 10px 0"></ol>
-        <div style="display:flex; gap:8px; justify-content:flex-end">
-          <button id="closeLb" class="nav-btn">Закрити</button>
+          <div style="margin-top:12px" id="shopList"></div>
         </div>
-      </div>
-    </div>
 
-    <div class="bottom">
-      <div class="nav-left">
-        <button id="adsBtn" class="nav-btn">Подивитись рекламу (+0.001)</button>
-        <button id="saveScoreBtn" class="nav-btn">Зберегти рекорд</button>
-      </div>
+        <div id="tabFriends" class="tabContent" style="display:none">
+          <h3 class="section-title">Друзі — реферали</h3>
+          <div class="small muted">Введи код друга або поділися своїм. При реєстрації друга ви отримуєте бонус.</div>
 
-      <div style="display:flex; gap:8px;">
-        <button id="leaderBtn" class="nav-btn">Лідерборд</button>
-        <button id="payoutBtn" class="nav-btn">Request Payout</button>
-      </div>
-    </div>
+          <div style="margin-top:10px" class="market-row">
+            <input id="refCode" placeholder="Код друга" />
+            <button class="btn ghost" id="applyRef">Застосувати</button>
+          </div>
 
-    <footer class="note">Demo — для реальних виплат потрібна інтеграція TonConnect/TonWeb та підтвердження KYC</footer>
+          <div style="margin-top:10px" class="muted small">Твій реферальний код: <strong id="myRef">...</strong></div>
+        </div>
+
+        <div id="tabLedger" class="tabContent" style="display:none">
+          <h3 class="section-title">Журнал дій</h3>
+          <div class="small muted">Операції зберігаються локально.</div>
+          <ol id="ledgerList" style="margin-top:10px"></ol>
+        </div>
+
+      </section>
+
+      <aside>
+        <div class="card">
+          <div class="section-title">Статистика</div>
+          <div class="muted small">CTC загалом: <div style="font-weight:800; font-size:18px" id="statCtcTotal">0</div></div>
+          <div class="muted small" style="margin-top:8px">TON загалом: <div style="font-weight:800; font-size:18px" id="statTonTotal">0.000</div></div>
+
+          <div style="margin-top:12px">
+            <div class="section-title">Параметри економіки</div>
+            <div class="muted small">Курс: <strong id="rateShow">1 TON = 1,000,000 CTC</strong></div>
+            <div class="muted small">CTC → TON формула: TON = CTC × 0.000001</div>
+            <div class="muted small" style="margin-top:6px">Майнінг: нагорода на добу (CTC) сумується з усіх майнерів</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="section-title">Request Payout (демо)</div>
+            <div class="muted small">Створює локальну заявку на вивід TON (потрібна реальна інтеграція для відправки).</div>
+            <div style="margin-top:8px" class="market-row">
+              <button class="btn ghost" id="requestPayout">Request Payout</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="section-title">Очистити дані</div>
+            <div class="muted small">Видалить localStorage (обережно!)</div>
+            <div style="margin-top:8px" class="market-row">
+              <button class="btn ghost" id="resetBtn">Reset Local Data</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer style="text-align:center; margin-top:14px; opacity:0.8; font-size:13px">
+      Demo — реальні виплати вимагають інтеграцію TonConnect/TonWeb та процедури KYC. Усі операції локальні.
+    </footer>
   </div>
 
 <script>
 /*
-  Stack-like mini game + local balance + leaderboard mock
-  Controls: click canvas or press Space to drop block
-  Start: press Start button
+City Miner — single-file economy demo
+- Currency: CityCoin (CTC) and TON
+- Exchange rate: 1 TON = 1,000,000 CTC  (so 1 CTC = 0.000001 TON)
+- Miners produce CTC per day; production ticked per second
+- All data saved in localStorage
 */
 
-// --- Utilities & storage keys
-const KEY_BEST = 'stackton_best';
-const KEY_LEADER = 'stackton_leaderboard';
-const KEY_BAL = 'stackton_balance';
-const KEY_PAYOUTS = 'stackton_payouts';
+// ---------- ECONOMY CONSTANTS (change to tune)
+const EXCHANGE_RATE = 1_000_000; // 1 TON = 1,000,000 CTC
+const FEE_PCT = 1; // percent fee on exchange
+const DAY_SECONDS = 86400;
 
-function loadJSON(key, fallback){ try { const v = localStorage.getItem(key); return v? JSON.parse(v): fallback; } catch(e){return fallback} }
-function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+// Miner catalogue (shop items)
+// each has: id, title, tonCost, ctcPerDay
+const SHOP = [
+  { id: 'basic', title: 'Basic Miner', tonCost: 0.0005, ctcPerDay: 100 },   // 100 CTC/day ≡ 0.0001 TON/day (100/1e6)
+  { id: 'worker', title: 'Worker Node', tonCost: 0.002, ctcPerDay: 450 },   // 450 CTC/day
+  { id: 'factory', title: 'Factory', tonCost: 0.01, ctcPerDay: 3000 },     // 3000 CTC/day
+  { id: 'plant', title: 'Power Plant', tonCost: 0.05, ctcPerDay: 18000 }   // 18k CTC/day
+];
 
-// --- UI elements
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const startBtn = document.getElementById('startBtn');
-const balanceEl = document.getElementById('balance');
-const bestEl = document.getElementById('best');
-const currentEl = document.getElementById('current');
-const adsBtn = document.getElementById('adsBtn');
-const leaderBtn = document.getElementById('leaderBtn');
-const leaderModal = document.getElementById('leaderModal');
-const leaderList = document.getElementById('leaderList');
-const closeLb = document.getElementById('closeLb');
-const saveScoreBtn = document.getElementById('saveScoreBtn');
-const payoutBtn = document.getElementById('payoutBtn');
+// ---------- STORAGE KEYS
+const KEY_STATE = 'cityminer_state_v1'; // keep everything in one object
 
-// --- Game variables
-let running = false;
-let stack = []; // array of {x, width, y, color}
-let moving = null; // currently moving block
-let dir = 1;
-let speed = 2.4;
-let level = 0;
-let canvasW = canvas.width;
-let canvasH = canvas.height;
-let baseY = canvasH - 40;
-let best = Number(localStorage.getItem(KEY_BEST) || 0);
-let balance = Number(localStorage.getItem(KEY_BAL) || 0);
-let currentScore = 0;
+// ---------- initial state
+const defaultState = {
+  ton: 0.005,       // starting TON for demo (give a tiny amount)
+  ctc: 0,           // CityCoin balance
+  miners: {},       // map id -> count
+  ledger: [],       // list of actions
+  payouts: [],      // payout requests
+  refCode: null,    // user's ref code
+  appliedRef: null, // code applied by user
+  createdAt: new Date().toISOString()
+};
 
-// colors palette
-const colors = ['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#10b981','#06b6d4','#60a5fa','#7c3aed'];
-
-// init UI
-bestEl.textContent = String(best);
-currentEl.textContent = String(currentScore);
-updateBalanceUI();
-
-function updateBalanceUI(){
-  // show 3 decimals
-  balanceEl.textContent = balance.toFixed(3) + ' TON';
-  localStorage.setItem(KEY_BAL, String(balance));
-}
-
-// create base block
-function resetGame(){
-  stack = [];
-  level = 0;
-  currentScore = 0;
-  // base block centered
-  const baseWidth = 160;
-  stack.push({ x: (canvasW - baseWidth)/2, width: baseWidth, y: baseY, color: '#2d3748' });
-  moving = null;
-  running = false;
-  speed = 2.4;
-  render();
-}
-
-// start game
-function startGame(){
-  resetGame();
-  running = true;
-  spawnMoving();
-  loop();
-}
-
-// create moving block at top of stack
-function spawnMoving(){
-  const prev = stack[stack.length-1];
-  const width = prev.width;
-  const y = prev.y - 40;
-  const x = 0; // start left
-  moving = { x, width, y, color: colors[level % colors.length] };
-  dir = 1;
-}
-
-// place moving block (on click/space)
-function placeBlock(){
-  if(!running || !moving) return;
-  // determine overlap with prev
-  const prev = stack[stack.length-1];
-  const overlapLeft = Math.max(prev.x, moving.x);
-  const overlapRight = Math.min(prev.x + prev.width, moving.x + moving.width);
-  const overlap = overlapRight - overlapLeft;
-
-  if(overlap <= 2){
-    // miss -> game over (allow tiny tolerance)
-    running = false;
-    onGameOver();
-    return;
+// ---------- load / save
+function loadState(){
+  try{
+    const raw = localStorage.getItem(KEY_STATE);
+    if(!raw) return JSON.parse(JSON.stringify(defaultState));
+    return JSON.parse(raw);
+  }catch(e){
+    console.error('load err', e);
+    return JSON.parse(JSON.stringify(defaultState));
   }
-
-  // cut block to overlap
-  const newWidth = overlap;
-  const newX = overlapLeft;
-  // create placed block
-  stack.push({ x: newX, width: newWidth, y: moving.y, color: moving.color });
-  level++;
-  currentScore = level;
-  currentEl.textContent = String(currentScore);
-
-  // increase speed slowly
-  speed += 0.12;
-
-  // spawn next moving
-  spawnMoving();
+}
+function saveState(){
+  localStorage.setItem(KEY_STATE, JSON.stringify(state));
 }
 
-// game over handler
-function onGameOver(){
-  // update best if needed
-  if(currentScore > best){
-    best = currentScore;
-    localStorage.setItem(KEY_BEST, String(best));
-    bestEl.textContent = String(best);
-  }
-  // show short flash
-  flashMessage(`Гра закінчена — рахунок ${currentScore}`, 1700);
+// ---------- app state
+let state = loadState();
+
+// ensure ref code exists
+if(!state.refCode){
+  state.refCode = 'REF' + Math.random().toString(36).slice(2,9).toUpperCase();
+  saveState();
 }
 
-// simple floating message
-function flashMessage(text, ms=1200){
-  const el = document.createElement('div');
-  el.textContent = text;
-  el.style.position = 'absolute'; el.style.left='50%'; el.style.top='12%';
-  el.style.transform='translateX(-50%)'; el.style.padding='10px 14px';
-  el.style.background='rgba(0,0,0,0.5)'; el.style.borderRadius='10px';
-  el.style.border='1px solid rgba(255,255,255,0.04)'; el.style.zIndex='60';
-  document.querySelector('.app').appendChild(el);
-  setTimeout(()=> el.remove(), ms);
-}
+// ---------- UI refs
+const tonBalanceEl = document.getElementById('tonBalance');
+const ctcBalanceEl = document.getElementById('ctcBalance');
+const minerListEl = document.getElementById('minerList');
+const shopListEl = document.getElementById('shopList');
+const projCtcDayEl = document.getElementById('projCtcDay');
+const projTonDayEl = document.getElementById('projTonDay');
+const rateTxt = document.getElementById('rateTxt');
+const feePct = document.getElementById('feePct');
+const rateShow = document.getElementById('rateShow');
+const statCtcTotal = document.getElementById('statCtcTotal');
+const statTonTotal = document.getElementById('statTonTotal');
+const ledgerList = document.getElementById('ledgerList');
+const myRef = document.getElementById('myRef');
+const calcPreview = document.getElementById('calcPreview');
 
-// main loop
-let raf = null;
-function loop(){
-  if(!running){ render(); return; }
-  // move current
-  moving.x += speed * dir;
-  if(moving.x + moving.width > canvasW){ moving.x = canvasW - moving.width; dir = -1; }
-  if(moving.x < 0){ moving.x = 0; dir = 1; }
-  render();
-  raf = requestAnimationFrame(loop);
-}
+// tabs
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.addEventListener('click', () => {
+  tabs.forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  const tab = t.getAttribute('data-tab');
+  document.querySelectorAll('.tabContent').forEach(c => c.style.display = c.id === 'tab' + capitalize(tab) ? '' : 'none');
+}));
 
-// render all
-function render(){
-  // clear
-  ctx.clearRect(0,0,canvasW,canvasH);
-  // background stars (subtle)
-  ctx.fillStyle = 'rgba(255,255,255,0.03)';
-  for(let i=0;i<80;i++){
-    // random static stars seeded by index for consistency
-    const x = (i*37 % canvasW);
-    const y = (i*21 % canvasH);
-    ctx.fillRect(x, y, 1,1);
-  }
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-  // draw stack from bottom up
-  for(let i=0;i<stack.length;i++){
-    const b = stack[i];
-    drawBlock(b.x, b.y, b.width, 32, b.color);
-  }
+// ---------- helpers for currency display
+function formatTon(x){ return Number(x).toFixed(6).replace(/\.?0+$/,'') } // show up to 6 decimals, trim zeros
+function formatCtc(n){ return Math.round(n) } // integer CTC for simplicity
 
-  // moving block
-  if(moving) drawBlock(moving.x, moving.y, moving.width, 32, moving.color);
-
-  // shadow / platform visual
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath();
-  ctx.ellipse(canvasW/2, baseY+28, 80, 20, 0, 0, Math.PI*2);
-  ctx.fill();
-}
-
-// draw rounded block with simple 3D shading
-function drawBlock(x, y, w, h, color){
-  // main
-  ctx.fillStyle = color;
-  roundRect(ctx, x, y, w, h, 6, true, false);
-  // top highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  roundRect(ctx, x+4, y+4, w-8, 8, 4, true, false);
-  // side shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
-  ctx.fillRect(x+w-8, y+6, 6, h-12);
-}
-
-// helper: rounded rect
-function roundRect(ctx,x,y,w,h,r,fill,stroke){
-  if (r===undefined) r = 5;
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-  if(fill) ctx.fill();
-  if(stroke) ctx.stroke();
-}
-
-// handle input
-canvas.addEventListener('click', () => {
-  if(!running) return;
-  placeBlock();
-});
-window.addEventListener('keydown', (e) => {
-  if(e.code === 'Space'){
-    e.preventDefault();
-    if(!running){ startGame(); return; }
-    placeBlock();
-  }
-});
-
-// start button
-startBtn.addEventListener('click', () => {
-  if(!running) startGame();
-  else { running = false; cancelAnimationFrame(raf); onGameOver(); }
-});
-
-// ads button (reward simulation)
-adsBtn.addEventListener('click', () => {
-  adsBtn.disabled = true;
-  adsBtn.textContent = 'Дивимось...';
-  setTimeout(() => {
-    const add = 0.001;
-    // add carefully to 6 decimals
-    balance = Math.round((balance + add) * 1000000) / 1000000;
-    updateBalanceUI();
-    flashMessage('+0.001 TON отримано 🎉', 1400);
-    adsBtn.disabled = false;
-    adsBtn.textContent = 'Подивитись рекламу (+0.001)';
-  }, 2000);
-});
-
-// leaderboard
-leaderBtn.addEventListener('click', () => {
-  const lb = loadJSON(KEY_LEADER, []);
-  renderLeader(lb);
-  leaderModal.classList.remove('hide');
-});
-closeLb.addEventListener('click', () => leaderModal.classList.add('hide'));
-
-function renderLeader(list){
-  leaderList.innerHTML = '';
-  if(!list.length){
-    leaderList.innerHTML = '<li class="muted">Поки що немає записів</li>';
-    return;
-  }
-  list.slice(0,20).forEach(item=>{
-    const li = document.createElement('li');
-    li.textContent = `${item.name} — ${item.score} pts`;
-    leaderList.appendChild(li);
+// ---------- compute production
+function totalCtcPerDay(){
+  let sum = 0;
+  SHOP.forEach(item=>{
+    const cnt = state.miners[item.id] || 0;
+    sum += cnt * item.ctcPerDay;
   });
+  return sum;
+}
+function totalTonPerDay(){
+  // CTC -> TON via EXCHANGE_RATE
+  return totalCtcPerDay() / EXCHANGE_RATE;
 }
 
-// save score to leaderboard
-saveScoreBtn.addEventListener('click', () => {
-  const name = prompt('Введи нік для лідерборду', 'Player');
-  if(!name) return;
-  const lb = loadJSON(KEY_LEADER, []);
-  lb.push({ name: name, score: currentScore, date: (new Date()).toISOString() });
-  // sort desc
-  lb.sort((a,b)=>b.score - a.score);
-  saveJSON(KEY_LEADER, lb);
-  flashMessage('Рекорд збережено в лідерборд', 1200);
-});
+// ---------- render UI
+function renderAll(){
+  tonBalanceEl.textContent = 'TON: ' + formatTon(state.ton);
+  ctcBalanceEl.textContent = 'CTC: ' + formatCtc(state.ctc);
+  rateTxt.textContent = `1 TON = ${EXCHANGE_RATE.toLocaleString()} CTC`;
+  feePct.textContent = FEE_PCT + '%';
+  rateShow.textContent = `1 TON = ${EXCHANGE_RATE.toLocaleString()} CTC`;
+  statCtcTotal.textContent = formatCtc(state.ctc);
+  statTonTotal.textContent = formatTon(state.ton);
 
-// payout request (mock)
-payoutBtn.addEventListener('click', () => {
-  const adr = prompt('Введи TON-адресу для виводу (це демо, реальну транзакцію потрібно робити вручну):', 'EQ...your_address...');
-  if(!adr) return;
-  const min = 0.05;
-  if(balance < min){
-    alert(`Мінімум для запиту виводу — ${min} TON. У тебе лише ${balance.toFixed(3)} TON`);
-    return;
+  // miners panel
+  minerListEl.innerHTML = '';
+  SHOP.forEach(item=>{
+    const cnt = state.miners[item.id] || 0;
+    const row = document.createElement('div');
+    row.className = 'miner';
+    row.innerHTML = `
+      <div>
+        <div style="font-weight:700">${item.title}</div>
+        <div class="muted small">Виробництво: <strong>${item.ctcPerDay}</strong> CTC/доба • Вартість: <strong>${item.tonCost} TON</strong></div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end">
+        <div class="muted small">Твій: <strong>${cnt}</strong></div>
+        <div style="display:flex; gap:6px">
+          <button class="btn ghost buyMiner" data-id="${item.id}" data-mode="ton">Купити (TON)</button>
+          <button class="btn ghost buyMiner" data-id="${item.id}" data-mode="ctc">Купити (CTC)</button>
+        </div>
+      </div>
+    `;
+    minerListEl.appendChild(row);
+  });
+
+  // shop list (same items, purchase by TON)
+  shopListEl.innerHTML = '';
+  SHOP.forEach(item=>{
+    const el = document.createElement('div');
+    el.style.marginBottom = '10px';
+    el.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div>
+          <div style="font-weight:700">${item.title}</div>
+          <div class="muted small">Produces ${item.ctcPerDay} CTC/day</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:800">${item.tonCost} TON</div>
+          <button class="btn primary buyMiner" data-id="${item.id}" data-mode="ton" style="margin-top:6px">Купити</button>
+        </div>
+      </div>`;
+    shopListEl.appendChild(el);
+  });
+
+  // projection
+  const totalDay = totalCtcPerDay();
+  projCtcDayEl.textContent = formatCtc(totalDay);
+  projTonDayEl.textContent = formatTon(totalDay / EXCHANGE_RATE);
+
+  // ledger
+  ledgerList.innerHTML = '';
+  state.ledger.slice().reverse().slice(0,30).forEach(entry=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div style="font-weight:700">${entry.title}</div><div class="muted small">${entry.desc} • <span class="muted">${new Date(entry.ts).toLocaleString()}</span></div>`;
+    ledgerList.appendChild(li);
+  });
+
+  myRef.textContent = state.refCode;
+  saveState();
+}
+
+// ---------- actions
+function addLedger(title, desc){
+  state.ledger.push({ title, desc, ts: Date.now() });
+  if(state.ledger.length > 500) state.ledger.shift();
+  renderAll();
+}
+
+// buy miner (mode 'ton' or 'ctc')
+function buyMiner(itemId, mode='ton'){
+  const item = SHOP.find(s=>s.id===itemId);
+  if(!item) return alert('Немає такого майнера');
+  if(mode === 'ton'){
+    if(state.ton + 1e-12 < item.tonCost) return alert('Недостатньо TON');
+    state.ton = Math.round((state.ton - item.tonCost) * 1e9)/1e9;
+    state.miners[itemId] = (state.miners[itemId]||0) + 1;
+    addLedger('Куплено майнер', `${item.title} за ${item.tonCost} TON`);
+  } else {
+    // buy with CTC: cost in CTC equivalent = item.tonCost * EXCHANGE_RATE
+    const costCtc = Math.round(item.tonCost * EXCHANGE_RATE);
+    if(state.ctc < costCtc) return alert('Недостатньо CTC');
+    state.ctc -= costCtc;
+    state.miners[itemId] = (state.miners[itemId]||0) + 1;
+    addLedger('Куплено майнер (CTC)', `${item.title} за ${costCtc} CTC`);
   }
-  const payouts = loadJSON(KEY_PAYOUTS, []);
-  const id = 'payout_' + Date.now();
-  payouts.push({ id, address: adr, amount: balance, status:'pending', createdAt: new Date().toISOString() });
-  saveJSON(KEY_PAYOUTS, payouts);
-  flashMessage('Заявка на вивід створена (локально)', 1500);
-  // zero balance locally (simulate hold)
-  balance = 0;
-  updateBalanceUI();
-  // save updated payouts
-  saveJSON(KEY_PAYOUTS, payouts);
-  console.log('Payouts:', payouts);
+  renderAll();
+}
+
+// click reward (manual)
+document.getElementById('addClick').addEventListener('click', () => {
+  state.ctc += 1; // simple click reward
+  addLedger('Клік', 'Отримано 1 CTC (клік)');
+  renderAll();
 });
 
-// init
-resetGame();
-render(); // draw base
-// ensure canvas resizes nicely with device pixel ratio
-function adjustCanvas(){
-  const ratio = window.devicePixelRatio || 1;
-  canvasW = canvas.width;
-  canvasH = canvas.height;
-  // keep static size as provided; you can change to responsive if want
+// collect from miners (force compute produced since last collect)
+function collectFromMiners(){
+  // We'll simulate that miners produce continuously; we store lastCollect timestamp
+  const now = Date.now();
+  if(!state.lastCollect) state.lastCollect = now;
+  const elapsed = (now - state.lastCollect) / 1000; // seconds since last collect
+  if(elapsed <= 0) return;
+  const perSec = totalCtcPerDay() / DAY_SECONDS;
+  const produced = perSec * elapsed;
+  const add = Math.floor(produced); // whole CTC units
+  if(add > 0){
+    state.ctc += add;
+    state.lastCollect = now;
+    addLedger('Зібрано', `Отримано ${add} CTC від майнерів (за ${Math.round(elapsed)} с)`);
+  } else {
+    state.lastCollect = now;
+  }
+  renderAll();
 }
-window.addEventListener('resize', adjustCanvas);
-adjustCanvas();
+document.getElementById('collectAll').addEventListener('click', collectFromMiners);
 
-</script>
-</body>
-</html>
+// buy miner buttons
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if(t.classList && t.classList.contains('buyMiner')){
+    const id = t.getAttribute('data-id');
+    const mode = t.getAttribute('data-mode') || 'ton';
+    buyMiner(id, mode);
+  }
+});
+
+// auto production tick (every second)
+setInterval(() => {
+  // calculate per-second production
+  const perSec = totalCtcPerDay() / DAY_SECONDS;
+  // accumulate fractional production
+  state._frac = (state._frac || 0) + perSec;
+  const add = Math.floor(state._frac);
+  if(add >= 1){
+    state.ctc += add;
+    state._frac -= add;
+    addLedger('Автопроцес', `+${add
+  
+  
