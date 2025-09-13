@@ -1,408 +1,96 @@
-Stack Earn TON — Starter repo (Vite + React + Tailwind)
+import React, { useState } from "react";
 
-This single-file code doc contains a ready-to-copy project skeleton for a lightweight "Play & Earn TON" starter app (no real blockchain or Firebase integrations). It is built with Vite + React + TypeScript + Tailwind and includes placeholder pages: Game, Ads (rewarded), Leaderboard, Friends, and a global balance stored in localStorage.
+export default function App() {
+  const [page, setPage] = useState<"game" | "ads" | "leaderboard" | "friends">("game");
+  const [balance, setBalance] = useState(0);
 
-> Files are provided below — copy them into a repo stack-earn-ton-starter/ and run npm install then npm run dev.
-
-
-
-
----
-
-package.json
-
-{
-  "name": "stack-earn-ton-starter",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-router-dom": "6.14.1"
-  },
-  "devDependencies": {
-    "@types/react": "18.2.21",
-    "@types/react-dom": "18.2.7",
-    "autoprefixer": "10.4.14",
-    "postcss": "8.4.24",
-    "tailwindcss": "3.6.4",
-    "typescript": "5.6.2",
-    "vite": "5.1.7",
-    "@vitejs/plugin-react": "4.2.0"
-  }
-}
-
-vite.config.ts
-
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-})
-
-index.html (public)
-
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stack Earn TON — Starter</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-
-tailwind.config.cjs
-
-module.exports = {
-  content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}'],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
-
-postcss.config.cjs
-
-module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
-
-src/main.tsx
-
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App'
-import './styles.css'
-
-createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
-)
-
-src/styles.css
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root{
-  --bg-1: #0f172a; /* dark blue */
-  --accent: #06b6d4;
-}
-
-html,body,#root{height:100%;}
-body{
-  @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-slate-100;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-}
-
-.app-shell{min-height:100vh; display:flex; flex-direction:column}
-.main{flex:1; padding:1.25rem;}
-.header{display:flex; justify-content:space-between; align-items:center}
-.card{ @apply bg-slate-800/60 rounded-2xl p-4 shadow-lg backdrop-blur-sm }
-.button{ @apply px-4 py-2 rounded-lg font-semibold transition-transform active:scale-95 }
-
-src/App.tsx
-
-import React from 'react'
-import { Routes, Route, Link } from 'react-router-dom'
-import Home from './pages/Home'
-import Game from './pages/Game'
-import Ads from './pages/Ads'
-import Leaderboard from './pages/Leaderboard'
-import Friends from './pages/Friends'
-import { BalanceProvider } from './state/BalanceContext'
-
-export default function App(){
-  return (
-    <BalanceProvider>
-      <div className="app-shell">
-        <header className="header p-4">
-          <Link to="/" className="text-xl font-bold">Stack Earn TON</Link>
-          <nav className="flex items-center gap-4">
-            <Link to="/">Головна</Link>
-            <Link to="/game">Гра</Link>
-            <Link to="/ads">Реклама</Link>
-            <Link to="/leaderboard">Лідерборд</Link>
-            <Link to="/friends">Друзі</Link>
-          </nav>
-        </header>
-
-        <main className="main">
-          <Routes>
-            <Route path="/" element={<Home/>} />
-            <Route path="/game" element={<Game/>} />
-            <Route path="/ads" element={<Ads/>} />
-            <Route path="/leaderboard" element={<Leaderboard/>} />
-            <Route path="/friends" element={<Friends/>} />
-          </Routes>
-        </main>
-
-        <footer className="p-4 text-center text-sm text-slate-300">Made with ♥ — Starter template</footer>
-      </div>
-    </BalanceProvider>
-  )
-}
-
-src/state/BalanceContext.tsx
-
-import React, { createContext, useContext, useEffect, useState } from 'react'
-
-type ContextType = {
-  balance: number
-  add: (amount: number) => void
-  reset: () => void
-}
-
-const BalanceContext = createContext<ContextType | undefined>(undefined)
-
-const STORAGE_KEY = 'stack_earn_ton_balance'
-
-export function BalanceProvider({children}:{children:React.ReactNode}){
-  const [balance, setBalance] = useState<number>(() => {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? Number(raw) : 0
-  })
-
-  useEffect(()=>{
-    localStorage.setItem(STORAGE_KEY, String(balance))
-  }, [balance])
-
-  function add(amount:number){
-    setBalance(b => Math.round((b + amount) * 1000000) / 1000000)
-  }
-  function reset(){
-    setBalance(0)
+  function renderPage() {
+    switch (page) {
+      case "ads":
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <h1 className="text-3xl font-bold mb-4">Реклама</h1>
+            <button
+              onClick={() => {
+                setTimeout(() => setBalance(balance + 0.001), 2000);
+              }}
+              className="px-6 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition"
+            >
+              Подивитись рекламу (+0.001 TON)
+            </button>
+          </div>
+        );
+      case "leaderboard":
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <h1 className="text-3xl font-bold mb-4">Лідерборд</h1>
+            <p>Скоро з’явиться топ-30 гравців 🏆</p>
+          </div>
+        );
+      case "friends":
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <h1 className="text-3xl font-bold mb-4">Друзі</h1>
+            <p>Отримуй бонус за друзів (скоро буде)</p>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <h1 className="text-3xl font-bold mb-2">Гра</h1>
+            <p>Тут буде ваша майбутня гра 🎮</p>
+          </div>
+        );
+    }
   }
 
   return (
-    <BalanceContext.Provider value={{balance, add, reset}}>
-      {children}
-    </BalanceContext.Provider>
-  )
-}
-
-export function useBalance(){
-  const ctx = useContext(BalanceContext)
-  if(!ctx) throw new Error('useBalance must be used inside BalanceProvider')
-  return ctx
-}
-
-src/components/BalanceBar.tsx
-
-import React from 'react'
-import { useBalance } from '../state/BalanceContext'
-
-export default function BalanceBar(){
-  const {balance} = useBalance()
-  return (
-    <div className="card flex items-center justify-between mb-4">
-      <div>
-        <div className="text-sm text-slate-300">Баланс</div>
-        <div className="text-2xl font-bold">{balance} TON</div>
-      </div>
-      <div className="text-sm text-slate-400">Локально збережено</div>
-    </div>
-  )
-}
-
-src/pages/Home.tsx
-
-import React from 'react'
-import BalanceBar from '../components/BalanceBar'
-
-export default function Home(){
-  return (
-    <div className="max-w-3xl mx-auto">
-      <BalanceBar />
-      <section className="card mb-4">
-        <h2 className="text-xl font-bold mb-2">Ласкаво просимо</h2>
-        <p className="text-slate-300">Це стартовий шаблон проєкту "Play & Earn TON". Тут можна додати гру пізніше, а поки що — перегляд реклами дає невеликий локальний бонус.</p>
-      </section>
-
-      <section className="card">
-        <h3 className="font-semibold mb-2">Швидкі дії</h3>
-        <div className="flex gap-2">
-          <a className="button bg-emerald-500 text-black" href="/game">Перейти до гри</a>
-          <a className="button bg-yellow-400 text-black" href="/ads">Подивитись рекламу</a>
+    <div
+      className={`min-h-screen flex flex-col text-white transition duration-700 ${
+        page === "game"
+          ? "bg-gradient-to-br from-purple-600 to-indigo-800"
+          : page === "ads"
+          ? "bg-gradient-to-br from-yellow-400 to-orange-600"
+          : page === "leaderboard"
+          ? "bg-gradient-to-br from-green-500 to-emerald-700"
+          : "bg-gradient-to-br from-pink-500 to-red-600"
+      }`}
+    >
+      <header className="flex justify-between items-center p-4 bg-black/20">
+        <h1 className="text-xl font-bold">GameToEarnTON</h1>
+        <div className="bg-black/40 px-4 py-2 rounded-full">
+          {balance.toFixed(3)} TON
         </div>
-      </section>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center">{renderPage()}</main>
+
+      <nav className="grid grid-cols-4 bg-black/30">
+        <button
+          onClick={() => setPage("game")}
+          className="py-3 hover:bg-white/20 transition"
+        >
+          Гра
+        </button>
+        <button
+          onClick={() => setPage("ads")}
+          className="py-3 hover:bg-white/20 transition"
+        >
+          Реклама
+        </button>
+        <button
+          onClick={() => setPage("leaderboard")}
+          className="py-3 hover:bg-white/20 transition"
+        >
+          Лідерборд
+        </button>
+        <button
+          onClick={() => setPage("friends")}
+          className="py-3 hover:bg-white/20 transition"
+        >
+          Друзі
+        </button>
+      </nav>
     </div>
-  )
+  );
 }
-
-src/pages/Game.tsx
-
-import React from 'react'
-import BalanceBar from '../components/BalanceBar'
-
-export default function Game(){
-  return (
-    <div className="max-w-3xl mx-auto">
-      <BalanceBar />
-      <div className="card">
-        <h2 className="text-xl font-bold mb-2">Гра — заглушка</h2>
-        <p className="text-slate-300 mb-4">Тут пізніше буде реальна HTML5/Canvas гра. Наразі — приклад того, як виглядатиме екран гри.</p>
-
-        <div className="border border-dashed border-slate-600 rounded-lg h-64 flex items-center justify-center">
-          <div className="text-slate-400">[Game placeholder — add your game here]</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-src/pages/Ads.tsx
-
-import React, { useState } from 'react'
-import BalanceBar from '../components/BalanceBar'
-import { useBalance } from '../state/BalanceContext'
-
-export default function Ads(){
-  const {add} = useBalance()
-  const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
-
-  function watchAd(){
-    setMsg(null)
-    setLoading(true)
-    // simulate watching rewarded ad
-    setTimeout(()=>{
-      setLoading(false)
-      add(0.001)
-      setMsg('Отримано бонус +0.001 TON')
-    }, 2200)
-  }
-
-  return (
-    <div className="max-w-3xl mx-auto">
-      <BalanceBar />
-
-      <div className="card">
-        <h2 className="text-xl font-bold mb-2">Реклама</h2>
-        <p className="text-slate-300 mb-4">Натисни кнопку, щоб подивитися умовну рекламу і отримати внутрішній бонус.</p>
-
-        <div className="flex gap-2">
-          <button className="button bg-blue-500" onClick={watchAd} disabled={loading}>{loading ? 'Дивимось...' : 'Подивитись рекламу (+0.001)'}</button>
-          <button className="button bg-slate-600" onClick={()=>{add(0.0001); setMsg('+0.0001 (тест)')}}>Малий бонус</button>
-        </div>
-
-        {msg && <div className="mt-4 text-green-300">{msg}</div>}
-      </div>
-    </div>
-  )
-}
-
-src/pages/Leaderboard.tsx
-
-import React from 'react'
-import BalanceBar from '../components/BalanceBar'
-
-// static mock leaderboard — later replace with real backend
-const MOCK = Array.from({length:10}).map((_,i)=>({
-  id: i+1,
-  name: `Player${i+1}`,
-  score: Math.floor(Math.random()*1000)+100
-}))
-
-export default function Leaderboard(){
-  return (
-    <div className="max-w-3xl mx-auto">
-      <BalanceBar />
-      <div className="card">
-        <h2 className="text-xl font-bold mb-2">Лідерборд</h2>
-        <ol className="list-decimal pl-5 text-slate-200">
-          {MOCK.map(p=> (
-            <li key={p.id} className="py-2 border-b border-slate-700/40 flex justify-between">
-              <div>{p.name}</div>
-              <div className="text-slate-300">{p.score} pts</div>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </div>
-  )
-}
-
-src/pages/Friends.tsx
-
-import React from 'react'
-import BalanceBar from '../components/BalanceBar'
-
-export default function Friends(){
-  const referral = 'https://t.me/your_bot?start=ref123'
-  return (
-    <div className="max-w-3xl mx-auto">
-      <BalanceBar />
-      <div className="card">
-        <h2 className="text-xl font-bold mb-2">Друзі & Реферали</h2>
-        <p className="text-slate-300 mb-4">Поділись реферальним посиланням і отримай бонуси, коли друзя приєднаються.</p>
-        <div className="flex gap-2">
-          <input className="rounded-lg p-2 bg-slate-700 text-white w-full" value={referral} readOnly />
-          <button className="button bg-indigo-500" onClick={()=>navigator.clipboard?.writeText(referral)}>Копіювати</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-docs/image-prompts.md
-
-# Prompts for generated assets
-
-## Логотип
-"Minimal flat logo of a stack tower made of colorful blocks, soft rounded corners, modern gaming style, vector, transparent background, SVG style"
-
-## Банер
-"Vibrant promotional banner for a mobile game 'Stack Earn TON', gradient teal-blue background, stack tower in center, neon accents, call to action: 'Play & Earn TON', 1200x630"
-
-## Іконки для кнопок
-"Set of simple 64x64 icons: play, trophy, ad, user, wallet — flat, minimal"
-
-
----
-
-Як запустити
-
-1. Скопіюй файли в папку stack-earn-ton-starter.
-
-
-2. npm install
-
-
-3. npm run dev — відкрий http://localhost:5173
-
-
-
-
----
-
-Що я додам далі за твоїм бажанням
-
-Згенерую логотип і банер (зараз містяться промпти).
-
-Додам просту HTML5/Canvas гру-демо, яку можна інтегрувати.
-
-Додам експорт репозиторію в GitHub (я можу підготувати архів або MD для copy-paste).
-
-
-Якщо хочеш — я зараз згенерую логотип і банер та додам до цього проєкту (або просто збережу файли). Якщо так — скажи які кольори/стиль віддаєш перевагу (темний/світлий, мінімалістичний/неоновий).
-
-    
